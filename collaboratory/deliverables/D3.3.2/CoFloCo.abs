@@ -1,0 +1,42 @@
+module Parallel;
+import * from ABS.StdLib;
+
+
+class C {
+	Bool nondet=False;
+	
+	Unit m1 (Int i, Int dir, Int n) {
+		while (0<i && i < n) {
+			if (dir == 1) {
+				i = i + 1;
+			}
+			else {
+				i = i - 1;
+			}
+		}
+	}
+	
+	Unit m2 (Int x, Int y, Int a, Int r) {
+		while (x > 0 && y > 0) {
+			if (nondet) {
+				x = x - 1;
+				y = r;
+			}
+			else {
+				y = y - 1;
+			}
+			suspend;
+		}
+	}
+
+	Unit m3 (Int x, Int y, Int a) {
+		while (x > 0) {
+			while (y > 0 && nondet) {
+				y = y - 1;
+				suspend;
+			}
+			x = x - 1;
+		}
+	}
+
+}

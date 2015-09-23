@@ -1,0 +1,43 @@
+module Parallel;
+import * from ABS.StdLib;
+
+interface IX {
+	Unit p (IY y);
+}
+
+interface IY {
+	Unit q ();
+	Unit s ();
+}
+
+class X implements IX {
+	Unit p (IY y) {
+		skip;
+		y!s();
+		Int method_end = 0;
+	}
+}
+
+class Y implements IY {
+	Unit q () {
+		Int method_end = 0;
+	}
+	Unit s () {
+		Int method_end = 0;
+	}
+
+}
+
+class IMain {
+	Unit main () {
+
+		IX x = new X ();
+		IY y = new Y ();
+
+		x!p(y);
+		skip;
+		y!q();
+		Int method_end = 0;
+	}
+}
+

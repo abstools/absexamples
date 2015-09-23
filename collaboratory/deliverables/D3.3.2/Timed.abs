@@ -1,0 +1,27 @@
+module Timed; 
+
+interface Job{
+	Unit start(Int dur);
+}
+
+class IMain{
+	Unit main(Int n){
+ 		while(n>0){
+  			Job job=new Job();
+  			job!start(10);	
+  			await duration(1,1);
+  			n= n-1;
+ 		}
+	}
+}
+
+
+class Job implements Job{
+	Unit start(Int dur){
+  		while(dur>0){
+    		[Cost: 1] dur=dur-1;
+    		await duration(1,1);
+  		}
+ 	}
+
+}

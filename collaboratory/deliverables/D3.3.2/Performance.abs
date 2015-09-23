@@ -1,0 +1,47 @@
+module Parallel;
+import * from ABS.StdLib;
+
+interface I {
+	Unit m (Int n);
+	Unit p (Int n, I x);
+	Unit m2 (Int n);
+	Unit q ();
+}
+
+class C implements I{
+	Unit m (Int n) {
+		I a = new C();
+		while (n > 0) {
+			a!p(n, a);
+			n = n - 1;
+		}
+	}
+	
+	Unit mthis (Int n) {
+		I a = new C();
+		while (n > 0) {
+			a!p(n, this);
+			n = n - 1;
+		}
+	}
+
+	Unit p (Int n, I x) {
+		while (n > 0) {
+			x!q();
+			n = n - 1;
+		}
+	}
+
+	Unit m2 (Int n) {
+		while (n > 0) {
+			I a = new C ();
+			a!p(n, a);
+			n = n - 1;
+		}
+	}
+
+	Unit q () { 
+		skip;
+	}
+	
+}

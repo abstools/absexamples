@@ -1,0 +1,36 @@
+module DemoTraffic;
+import * from ABS.StdLib;
+
+interface II {
+	Unit work (Int n, List<Int> l);
+}
+
+interface IS {
+	Int process (List<Int> l);
+}
+
+class Master (IS s) implements II {
+
+
+ 	Unit work (Int n, List<Int> l){
+ 		while (n>0) {
+ 			l = Cons(1,l);
+			Fut<Int> q = s!process(l);
+			q.get;
+			n = n - 1;
+  		}
+ 	}
+ 	
+}
+
+class Slave () implements IS{
+	Int process (List<Int> l) {return 1;}
+}	
+
+class IMain {
+	Unit main (List<Int> l, Int n) {
+	 	IS s = new Slave();
+		II m = new Master(s);
+	 	m!work(n,l);
+	 }
+}

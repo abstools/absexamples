@@ -1,0 +1,19 @@
+module Noncumulative;
+import * from ABS.StdLib;
+
+class IMain {
+	Unit main (Int s, Int n) {
+		[x == acquire(10)]
+		Int i= 0;
+		[r == acquire(100)]
+		i = 0;
+		[r == acquire(s)]
+		i = 1;
+    	[r == release()]
+		i = 2;
+		[y == acquire(n)]
+		i = 3;
+    	[x == release()]
+		i = 4;
+	}
+}

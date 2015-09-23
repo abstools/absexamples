@@ -1,0 +1,34 @@
+module Parallel;
+import * from ABS.StdLib;
+
+interface IO1 {
+	Unit f ();
+}
+
+interface IO2 {
+	Unit g (Fut<Unit> w);
+}
+
+class O1 implements IO1 {
+	Unit f () {
+		skip;
+	}
+}
+
+class O2 implements IO2 {
+	Unit g (Fut<Unit> w) {
+		skip;
+		await w?;
+		skip;
+	}
+}
+
+{
+		Fut<Unit> x;
+		Fut<Unit> y;
+		IO1 o1 = new O1();
+		IO2 o2 = new O2();
+		x = o1!f();
+		y = o2!g(x);
+		await y?;
+}
