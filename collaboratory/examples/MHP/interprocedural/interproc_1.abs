@@ -1,0 +1,82 @@
+module Mhf_1;
+
+
+
+interface A {
+  Unit m();
+}
+interface B {
+  Unit f();
+  Unit q();
+  Unit g(Fut<Unit> w);
+  Unit h(Fut<Unit> a,Fut<Unit> b);
+  Unit k(Fut<Unit> a,Fut<Unit> b);
+}
+
+class A1() implements A {
+ 
+Unit m(){
+	Int i = 0;
+	Fut<Unit> x;
+	Fut<Unit> z;
+	Fut<Unit> w;
+	B j=new local B1();
+	x=j!f();
+	z=j!q();
+	skip;
+	if (i<10){ 
+	   w = j!g(x);
+	   skip;
+	}else{
+	   w = j!k(x,z);
+	   skip;
+	     }
+	await w?;
+}   
+
+
+}
+
+class B1() implements B {
+ 
+Unit f(){
+ 	skip;
+}
+
+Unit q(){
+ 	skip;
+}
+
+Unit g(Fut<Unit> w){
+	skip;
+ 	await w?;
+ 	skip;
+}
+
+Unit h(Fut<Unit> a,Fut<Unit>b){
+    skip;
+    Fut<Unit> r;
+    B i = new local B1();
+    r = i!g(a);
+    skip;
+    await r?;
+
+}
+
+Unit k(Fut<Unit> a,Fut<Unit>b){
+    skip;
+    await a?;
+    skip;
+    await b?;
+    skip;
+
+}
+
+}
+
+//main
+{
+	A l=new local A1();
+	l!m();
+
+}

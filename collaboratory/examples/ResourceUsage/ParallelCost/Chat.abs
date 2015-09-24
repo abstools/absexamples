@@ -1,0 +1,326 @@
+	module ABSChat.Main;
+
+data ServerMsg = Welcome
+   	           | GoodBye
+          	   | NewMessage(String);
+
+data ClientMsg = ChatMessage(String,String);
+
+interface Server {
+   Unit start();
+    Session connect(Client c);
+}
+
+interface Session {
+   Unit receive(ClientMsg m);
+   Unit close();
+}
+
+interface Client {
+	Unit setServer(Server s);
+	Unit start();
+	Unit receive(ServerMsg m);
+	ClientGUI getGUI();
+}
+
+interface ClientGUI {
+   Unit init2();
+   Button getSendButton();
+   TextField getTextField();
+}
+
+interface ClientIntern extends Client {
+	 Unit sendText(String text);
+}
+ 
+interface ClientGUIIntern extends ClientGUI {
+    ClientIntern getClientIntern();
+   String getTextFieldText();
+} 
+
+class ClientGUIImpl( ClientIntern client) implements ClientGUIIntern {
+   Window gui;
+   Button sendButton;   
+   TextField textField; 
+   Bool initialized = False;
+   
+   {   
+   	  gui = new WindowImpl();
+   } 
+   
+   Unit init2() { 
+   	  Fut<Button> f = gui!new localButton("Send");
+   	  sendButton = f.get;
+   	  ButtonListener l = new SendButtonListener(this);
+   	  sendButton!registerListener(l);
+
+      Fut<TextField> tf;
+      tf = gui!new localTextField();
+      textField = tf.get;
+
+   	  initialized = True;
+   	  Int method_end = 0;
+   }
+   
+   Button getSendButton() {
+      await initialized;
+      Button b = sendButton;
+      Int method_end = 0;
+      return b;
+   }
+   
+   TextField getTextField() {
+      await initialized;
+      TextField t = textField;
+      Int method_end = 0;
+      return t;
+   }
+   
+   String getTextFieldText() {
+      Fut<String> f = textField!getText();
+      Int method_end = 0;
+      return f.get;
+   }
+   
+   ClientIntern getClientIntern() {
+   		ClientIntern c = client;
+   		Int method_end = 0;
+      	return c;
+   }
+}
+
+
+class SendButtonListener([Final]  ClientGUIIntern client) implements ButtonListener {
+   Unit pressed() {
+       ClientIntern ci = client.getClientIntern();
+       String s = client.getTextFieldText();
+   	   ci.sendText(s);   	   
+   	   Int method_end = 0;
+   }
+}
+
+
+[COG]
+class ClientImpl implements ClientIntern { 
+   String name = "Alice";
+   Server server;
+   Session session;
+    ClientGUI gui;
+
+   ClientGUI getGUI() {
+	  if (gui == null) {
+	     gui = new ClientGUIImpl(this); /// 3
+	     gui.init2();
+	  }
+	  ClientGUI cg = gui;
+	  Int method_end = 0;
+   	  return cg;
+   }
+
+   Unit setServer(Server s) { 
+   	   this.server = s;
+   	   Int method_end = 0;
+   }
+   
+   Unit start() {
+      await server != null;
+      Fut<Session> f = server!connect(this);
+      await f?;
+      session = f.get; 
+      Int method_end = 0;
+   }
+   
+   Unit receive(ServerMsg msg) {
+   	  await session != null;
+	  ClientMsg ans = ChatMessage("","");
+	  //if(msg==Welcome){
+   	      ans = ChatMessage(name,"Welt"); 
+      	  //}
+   	  
+   	  Fut<Unit> u = session ! receive(ans);
+   	  await u?;
+   	  session ! close();
+   	  Int method_end = 0;
+   }  
+   
+   Unit sendText(String text) {
+      await session != null;
+      session ! receive(ChatMessage(name,text));
+      Int method_end = 0;
+   }
+}
+interface ButtonListener {
+   Unit pressed();
+}
+
+interface Window {
+    Button new localButton(String label);
+    TextField new localTextField();
+}
+
+interface TextField {
+   String getText();
+   Unit setText(String new localText);
+}
+
+interface Button {
+   Unit press();
+   String getLabel();
+   Unit registerListener(ButtonListener l);
+}
+
+class TextFieldImpl implements TextField {
+  String text = "";
+  String getText() {
+ 	 Int method_end = 0;
+     return text;
+  }
+
+  Unit setText(String s) {
+  	 text = s;
+  	 Int method_end = 0;
+  }
+}
+
+[COG]
+class WindowImpl implements Window {
+    Button new localButton(String label) {
+      Button b = new ButtonImpl(this, label);
+      Int method_end = 0;
+      return b;
+   }
+   
+   TextField new localTextField() {
+      TextField t = new TextFieldImpl();
+      Int method_end = 0;
+   	  return t;
+   }
+}
+
+class ButtonImpl( Window gui, String label) implements Button {
+    List<ButtonListener> listener = Nil;
+   
+    [listener <= max(listener)]
+	Unit press() {
+		List<ButtonListener> r = listener;
+		while (r != Nil) {
+			ButtonListener l = head(r);
+			l ! pressed();
+			r = tail(r);
+		}	
+		Int method_end = 0;
+	}
+	
+	String getLabel() {
+		String l = label;
+		Int method_end = 0;
+		return l;
+	}
+	
+	[listener <= max(listener)]
+	Unit registerListener(ButtonListener l) {
+		//listener = Cons(l,listener);
+		listener = appendright(listener,l);
+		Int method_end = 0;
+	}
+}
+
+
+interface ServerIntern extends Server {
+	Unit sessionClosed(SessionIntern i);
+}
+
+interface SessionIntern extends Session {
+   Unit init2();
+}
+
+[COG]
+class ServerImpl implements ServerIntern { 
+   Bool running = False;
+   List<SessionIntern> sessions = Nil;
+   
+   Unit start() {
+      running = True;
+      Int method_end = 0;
+   }
+   
+   Session connect(Client c) {
+       await running;
+       SessionIntern s;
+       s = new SessionImpl(this, c);
+       sessions = Cons(s,sessions);
+       s!init2();
+       Int method_end = 0;
+       return s;
+   }
+
+	[sessions <= max(sessions)]
+	Unit sessionClosed(SessionIntern i) {
+	   sessions = without(sessions,i);
+	   Int method_end = 0;
+	}
+
+}
+
+
+class SessionImpl(ServerIntern server, Client c) implements SessionIntern {
+	Unit init2() {
+		c!receive(Welcome);
+		Int method_end = 0;
+	}
+	
+	Unit close() {
+	   server.sessionClosed(this);
+	   Int method_end = 0;
+	}
+	
+	Unit receive(ClientMsg m) {
+		Int method_end = 0;
+	}
+
+}
+
+interface User {
+   Unit use(ClientGUI client);
+}
+
+[COG] 
+class UserImpl implements User {
+   ClientGUI gui;
+   Button sendBtn;
+   TextField textField;
+	
+   Unit use(ClientGUI client) { 
+	  gui = client;
+	  Fut<Button> f = gui!getSendButton();
+	  sendBtn = f.get;
+	  
+	  Fut<TextField> f2 = gui!getTextField();
+	  textField = f2.get;
+	  
+	  textField!setText("Hello");
+	  sendBtn!press();
+	  Int method_end = 0;
+   }
+}
+
+class Main {
+	Unit main (Int nclients, Int nUsers) {
+	 	Server server = new ServerImpl();  
+		server ! start();
+		
+		while(nclients > 0) {
+			Client client = new ClientImpl();
+			client ! setServer(server);
+			client ! start();
+			
+			Fut<ClientGUI> fgui = client ! getGUI();
+			ClientGUI gui = fgui.get;
+		
+			User user = new UserImpl();
+			user ! use(gui);
+			nclients = nclients - 1;
+		}	
+		Int method_end = 0;
+	}
+}
