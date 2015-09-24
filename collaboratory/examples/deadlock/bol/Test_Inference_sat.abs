@@ -12,7 +12,7 @@ interface A {
 
 class A implements A {
    A m(){
-	A x = new cog A();
+	A x = new A();
 	Fut<A> y = x!m();
 	y.get;
 	return this;
@@ -20,6 +20,6 @@ class A implements A {
 }
 
 {
-A i = new cog A();
+A i = new A();
 Fut<A> j = i!m();
 }

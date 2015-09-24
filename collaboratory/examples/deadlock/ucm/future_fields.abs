@@ -11,7 +11,7 @@ class A{
 Fut<Int> f;
 
 Unit run(){
-   Bi b=new cog B();
+   Bi b=new B();
    f=this.make_call(b);
    Fut<Unit> ff;
    ff=this!receive_answer();
@@ -37,6 +37,6 @@ Int call(){
 
 
 {
-new A();
+new local A();
 
 }

@@ -27,8 +27,8 @@ return out.get;
 {
   A x;
   A y;
-  x = new A1(100,y);
-  y = new A1(100,x); 
+  x = new local A1(100,y);
+  y = new local A1(100,x); 
   x.set_mutual(y);
   x!mut_recursive();
 

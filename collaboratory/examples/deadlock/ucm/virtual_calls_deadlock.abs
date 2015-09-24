@@ -51,11 +51,11 @@ Unit b2(){}
  Int i=2;
  Ai a;
  if(i>2){
-	a=new cog A();
+	a=new A();
  }else{
-	a=new cog C();
+	a=new C();
  }
- Bi b=new B();
+ Bi b=new local B();
  b!b1(a);
   
 

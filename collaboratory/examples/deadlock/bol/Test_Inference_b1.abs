@@ -23,8 +23,8 @@ class A implements A {
 }
 
 {
-A i = new cog A();
-A j = new cog A();
+A i = new A();
+A j = new A();
 Fut<A> y1 = i!m1(j);
 Fut<A> y2 = j!m1(i);
 }

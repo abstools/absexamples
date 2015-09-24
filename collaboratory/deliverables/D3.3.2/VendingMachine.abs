@@ -49,8 +49,8 @@ class IPrettyPrinter implements PrettyPrinter{
 
 class IMain implements Main{
   Unit main( Int n ){
-    PrettyPrinter o = new IPrettyPrinter();
-    VendingMachine v = new IVendingMachine( 0, o );
+    PrettyPrinter o = new local IPrettyPrinter();
+    VendingMachine v = new local IVendingMachine( 0, o );
 
     v ! insertCoins(n);
     Fut<Int> f = v ! retrieveCoins();

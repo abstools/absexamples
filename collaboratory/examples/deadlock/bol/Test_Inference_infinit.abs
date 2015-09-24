@@ -13,11 +13,11 @@ interface C {
 
 class C implements C {
    C m(){
-	C x = new cog C();
+	C x = new C();
 	return x;
    }
    C p(){
-	C a = new cog C();
+	C a = new C();
 	Fut<C> fut = a!p();
 	await fut?;
 	return fut.get;
@@ -26,6 +26,6 @@ class C implements C {
 
 
 {
-C i = new cog C();
+C i = new C();
 Fut<C> fut = i!p();
 }

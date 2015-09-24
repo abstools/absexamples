@@ -43,9 +43,9 @@ Unit c2(){}
 
 
 {
-Bi b1=new cog B();
-Bi b2=new cog B();
-Ai a=new A();
+Bi b1=new B();
+Bi b2=new B();
+Ai a=new local A();
   Fut<Unit> f;
  
 

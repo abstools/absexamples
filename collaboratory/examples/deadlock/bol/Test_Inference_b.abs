@@ -18,7 +18,7 @@ class A implements A {
 }
 
 {
-A y = new cog A();
+A y = new A();
 Fut<A> z = y!m();
 z.get;
 }

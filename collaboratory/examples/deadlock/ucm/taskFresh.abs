@@ -14,7 +14,7 @@ Unit run(){
 }
 
 Unit createWorker(Int work){
-  Worker w=new cog Worker(this);
+  Worker w=new Worker(this);
   Fut<Unit> f=w!assignWork(work);
   await f?;
 }
@@ -40,6 +40,6 @@ Unit makeWork(){}
 //the workers don't start until all the work has been assigned
 //there should be deadlock risks without the freshness analysis
 {
-new Factory(10);
+new local Factory(10);
 
 }

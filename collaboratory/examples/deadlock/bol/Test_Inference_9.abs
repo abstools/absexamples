@@ -20,6 +20,6 @@ class A implements A {
 }
 
 {
-A i = new cog A();
+A i = new A();
 Fut<A> j = i!m();
 }

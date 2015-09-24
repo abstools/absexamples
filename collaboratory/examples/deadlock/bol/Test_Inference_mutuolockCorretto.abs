@@ -25,9 +25,9 @@ class C implements C {
 
 
 {
-C a = new cog C();
-C b = new cog C();
-C c = new cog C();
+C a = new C();
+C b = new C();
+C c = new C();
 Fut<C> fut = a!n(b,c);
 Fut<C> fut = a!n(c,b);
 }

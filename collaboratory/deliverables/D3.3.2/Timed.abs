@@ -7,7 +7,7 @@ interface Job{
 class IMain{
 	Unit main(Int n){
  		while(n>0){
-  			Job job=new Job();
+  			Job job=new local Job();
   			job!start(10);	
   			await duration(1,1);
   			n= n-1;

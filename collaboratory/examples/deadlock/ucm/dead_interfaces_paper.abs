@@ -35,8 +35,8 @@ Unit syncSend(String m){
 
 
 {
-ServI s=new cog Server();
-ClientI c=new cog Client();
+ServI s=new Server();
+ClientI c=new Client();
 s!initialize(c);
 c!syncSend("hello");
 }

@@ -20,7 +20,7 @@ Di n(Di b,Di c){
    return this;
 }
 Di m(){
-	return new cog D();
+	return new D();
 }
 Di p(Di c){
   Fut<Di> f;
@@ -29,10 +29,10 @@ Di p(Di c){
 }
 
 Unit rrun(){
-   Di o1=new cog D();
+   Di o1=new D();
    Fut<Di> f;
-   Di o2=new cog D();
-   Di o3=new D();
+   Di o2=new D();
+   Di o3=new local D();
    f=o1!n(o2,o3);
    f.get;
 }
@@ -44,7 +44,7 @@ Unit rrun(){
 
 
 {
-Di mm=new D();
+Di mm=new local D();
 mm.rrun();
 
 }

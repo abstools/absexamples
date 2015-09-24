@@ -15,7 +15,7 @@ interface C {
 
 class C implements C {
    C m(){
-	C x = new cog C();
+	C x = new C();
 	return x;
    }
    C n2(C c){
@@ -28,8 +28,8 @@ class C implements C {
    }
    Fut<C> q(C a, C b){
 	Fut<C> fut2 = a!n2(b);
-	C i1 = new cog C();
-	C i2 = new cog C();
+	C i1 = new C();
+	C i2 = new C();
 	Fut<C> fut3 = i1!n2(i2);
 	return fut3;
    }
@@ -37,8 +37,8 @@ class C implements C {
 
 
 {
-C i = new cog C();
-C j = new cog C();
-C k = new cog C();
+C i = new C();
+C j = new C();
+C k = new C();
 Fut<C> fut4 = i!q(j,k);
 }

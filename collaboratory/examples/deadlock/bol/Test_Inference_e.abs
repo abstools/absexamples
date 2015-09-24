@@ -6,15 +6,15 @@ interface A {
 
 class A implements A {
    A n(){
-	A x = new cog A();
+	A x = new A();
 	Fut<A> y = x!n(); 
-	A x2 = new cog A();
+	A x2 = new A();
 	Fut<A> y2 = x2!n(); 
 	return y2.get;
    }
 }
 
 {
-A z = new cog A();
+A z = new A();
 Fut<A> k = z!n();
 }

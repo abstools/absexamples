@@ -14,7 +14,7 @@ interface C {
 
 class C implements C {
    C m(){
-	C x = new cog C();
+	C x = new C();
 	return x;
    }
    C n1(C c){
@@ -29,7 +29,7 @@ class C implements C {
 }
 
 {
-C y = new cog C();
-C z = new cog C();
+C y = new C();
+C z = new C();
 Fut<C> i = y!h(z);
 }

@@ -39,9 +39,9 @@ Unit k(){}
 }
 
 {
-Ai a=new cog A();
-Bi b=new cog B();
-Ci c=new cog C();
+Ai a=new A();
+Bi b=new B();
+Ci c=new C();
  a!m(c,b);
  b!n(a);
 }

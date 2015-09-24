@@ -10,7 +10,7 @@ interface I {
 
 class C implements I{
 	Unit m (Int n) {
-		I a = new C();
+		I a = new local C();
 		while (n > 0) {
 			a!p(n, a);
 			n = n - 1;
@@ -18,7 +18,7 @@ class C implements I{
 	}
 	
 	Unit mthis (Int n) {
-		I a = new C();
+		I a = new local C();
 		while (n > 0) {
 			a!p(n, this);
 			n = n - 1;
@@ -34,7 +34,7 @@ class C implements I{
 
 	Unit m2 (Int n) {
 		while (n > 0) {
-			I a = new C ();
+			I a = new local C ();
 			a!p(n, a);
 			n = n - 1;
 		}

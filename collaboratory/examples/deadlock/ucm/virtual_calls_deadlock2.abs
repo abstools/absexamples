@@ -47,11 +47,11 @@ Int getField(){
 
 
 {
- Obj node0 = new cog RemoteObj();
- Obj node1 = new RemoteObj();//this should be a cog!
- Obj node2 = new  LocalObj();
- Obj node3 = new  LocalObj();
+ Obj node0 = new RemoteObj();
+ Obj node1 = new local RemoteObj();//this should be a cog!
+ Obj node2 = new local  LocalObj();
+ Obj node3 = new local  LocalObj();
  List<Obj> l=list[node0,node1,node2,node3];
- new MainObj(l);
+ new local MainObj(l);
  
 }

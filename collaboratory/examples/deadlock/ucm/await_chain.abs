@@ -23,6 +23,6 @@ Unit waiterwaiter(Fut<Unit> ff){
 
 
 {
-new A();
+new local A();
 
 }

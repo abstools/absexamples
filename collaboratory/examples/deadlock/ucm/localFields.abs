@@ -14,7 +14,7 @@ Fut<Unit> f;
 
 Unit run(){
    Int a=0;
-   Bi o=new B();
+   Bi o=new local B();
    if (a>0){
       f=o!a();
    }else{
@@ -42,5 +42,5 @@ Unit b(){
 
 
 {
-new A();
+new local A();
 }

@@ -6,7 +6,7 @@ interface MainTest {
 } 
 class MainImpl implements MainTest {      
 	Unit main (Int n, Int m) {      
-		ServerInterface y = new Server(null);   
+		ServerInterface y = new local Server(null);   
 		y!start(n,m);
 	}
 }
@@ -31,14 +31,14 @@ class Server (DAOInterface dao) implements ServerInterface {
     Fut<Bool> b = this!initDAO ();
     await b?;
     while(n > 0) {
-      HandlerInterface h = new Handler(this.dao);
+      HandlerInterface h = new local Handler(this.dao);
       h!run2(m); 
       n = n - 1;
   	}  
   } 
 
   Bool initDAO () {
-    this.dao = new DAO (null);
+    this.dao = new local DAO (null);
     Fut<Bool> b = this.dao!initDB();
     await b?;
     return True; 
@@ -59,7 +59,7 @@ class Handler (DAOInterface dao) implements HandlerInterface {
 
 class DAO (DBInterface db)  implements DAOInterface{
   Bool initDB () {
-    this.db = new DB();
+    this.db = new local DB();
     return True;
   }
   Bool query(Int m) {
@@ -78,7 +78,7 @@ class DB () implements DBInterface{
 
 
 {
-	MainTest m = new MainImpl ();
+	MainTest m = new local MainImpl ();
 	m.main(10,20);
 }	
 

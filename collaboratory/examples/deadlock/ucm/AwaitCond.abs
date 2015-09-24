@@ -16,7 +16,7 @@ Bi field1;
 Unit run(){
 Fut<Unit> f=b!setOtherField(1);
 f.get;
-field1= new B();
+field1= new local B();
 }
 Bi getField(){
    await field1!=null;
@@ -41,8 +41,8 @@ Unit setOtherField(Int x){
 
 //main block
 {
-Bi b=new  B();
-Ai a=new cog A(b);
+Bi b=new local  B();
+Ai a=new A(b);
  
 
 b.obtainFieldAndUse(a);

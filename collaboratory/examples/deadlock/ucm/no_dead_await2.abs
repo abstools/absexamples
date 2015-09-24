@@ -19,7 +19,7 @@ class A implements Ai{
 
 Unit a1(){
   Fut<Unit> f;
-  Bi b=new cog B();
+  Bi b=new B();
   f=b!b1(this);
   f.get;
 }
@@ -33,7 +33,7 @@ class B implements Bi{
 Unit b1(Ai a){
 
   Fut<Unit> f;
-  Ci c=new cog C();
+  Ci c=new C();
   f=c!c1(this);
   await f?;
   f.get;
@@ -55,7 +55,7 @@ Unit c1(Bi b){
 }
 
 {
-Ai a=new A();
+Ai a=new local A();
 a!a1();
 
 }

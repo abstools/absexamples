@@ -29,8 +29,8 @@ class Slave () implements IS{
 
 class IMain {
 	Unit main (List<Int> l, Int n) {
-	 	IS s = new Slave();
-		II m = new Master(s);
+	 	IS s = new local Slave();
+		II m = new local Master(s);
 	 	m!work(n,l);
 	 }
 }

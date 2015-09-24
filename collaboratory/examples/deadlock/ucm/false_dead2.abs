@@ -15,13 +15,13 @@ class D implements Di{
 
 Di m(){
   Fut<Di> f;
-  Di c=new cog D();
+  Di c=new D();
   f=c!m();
   return f.get;
 }
 
 Unit rrun(){
-   Di o1=new cog D();
+   Di o1=new D();
    Fut<Di> f;
    f=o1!m();
    f.get;
@@ -34,7 +34,7 @@ Unit rrun(){
 
 
 {
-Di mm=new D();
+Di mm=new local D();
 mm.rrun();
 
 }

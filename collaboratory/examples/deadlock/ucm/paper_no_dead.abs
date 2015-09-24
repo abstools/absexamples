@@ -17,7 +17,7 @@ interface Di{
 class C implements Ci{
 
 Ci m(){
-	return new cog C();
+	return new C();
 }
 }
 
@@ -30,13 +30,13 @@ Ci n(Di c){
    return a;
 }
 Ci m(){
-	return new cog C();
+	return new C();
 }
 
 Unit rrun(){
-   Di o1=new cog D();
+   Di o1=new D();
    Fut<Ci> f;
-   Di o2=new cog D();
+   Di o2=new D();
    f=o1!n(o2);
    f.get;
 }
@@ -48,7 +48,7 @@ Unit rrun(){
 
 
 {
-Di mm=new D();
+Di mm=new local D();
 mm.rrun();
 
 }

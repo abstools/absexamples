@@ -21,7 +21,7 @@ class Server implements ServI{
 ProtocolI protocol;
 Unit initialize(ClientI client){
   Fut<Unit> f;
-  protocol=new Protocol();
+  protocol=new local Protocol();
   f=client!setProt(protocol);
   f.get;
 }
@@ -43,8 +43,8 @@ Unit syncSend(String m){
 
 
 {
-ServI s=new cog Server();
-ClientI c=new cog Client(s);
+ServI s=new Server();
+ClientI c=new Client(s);
 s!initialize(c);
 c!syncSend("hello");
 }
