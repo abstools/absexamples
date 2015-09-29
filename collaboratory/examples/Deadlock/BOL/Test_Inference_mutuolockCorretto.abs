@@ -28,6 +28,6 @@ class C implements C {
 C a = new C();
 C b = new C();
 C c = new C();
-Fut<C> fut = a!n(b,c);
-Fut<C> fut = a!n(c,b);
+Fut<C> fut1 = a!n(b,c);
+Fut<C> fut2 = a!n(c,b);
 }
