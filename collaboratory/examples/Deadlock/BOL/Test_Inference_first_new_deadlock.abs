@@ -1,4 +1,5 @@
-module Test_Inference_first_new local_deadlock;
+module module Test_Inference_first_new_deadlock;
+
 
 interface A {
    A m();
