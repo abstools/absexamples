@@ -1,8 +1,12 @@
 module Test;
 
 {
-    Rat o1 = 2 % 1;
-    println(toString(o1));
-    Rat o2 = 5/3 % 1/2;
-    println(toString(o2));
+  Int n=1000;
+  while ( n>0 ) {
+    print("Hello World ");
+    println(toString(n));
+    n=n-1;
+    await duration(2000, 2000);
+  }
 }
+								
