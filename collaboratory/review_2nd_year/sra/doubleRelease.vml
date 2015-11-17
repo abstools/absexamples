@@ -1,0 +1,17 @@
+/* DOUBLE RELEASE */
+Int doubleRelease(VM x, VM y) {
+	release x; release y;
+	return 0 ;
+}
+
+Int user1() {
+	VM x ; VM y ; Fut<Int> f ;
+	x = new VM() ; y = new VM();
+	f = this!doubleRelease(x, y);
+	Int a = f.get ; return 0 ; 
+}
+
+{
+  Fut<Int> fuser1 = this!user1();
+  Int a = fuser1.get;
+}

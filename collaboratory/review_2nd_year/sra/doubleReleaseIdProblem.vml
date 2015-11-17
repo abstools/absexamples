@@ -1,0 +1,23 @@
+/* DOUBLE RELEASE (IDENTITY PROBLEM) */
+
+Int doubleRelease(VM x, VM y) {
+	release x; release y;
+	return 0 ;
+}
+
+Int user2() {
+	VM x ; Fut<Int> f ;
+	VM x = new vm ;
+	//perform the call with the same argument repeated
+	//the analyser must keep the arguments' identities
+	f = this!doubleRelease(x, x) ;
+	Int a = f.get ; return 0 ; 
+}
+
+{
+  Fut<Int> fuser2 = this!user2();
+  Int a = fuser2.get;
+}
+
+
+
