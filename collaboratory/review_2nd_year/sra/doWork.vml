@@ -1,22 +1,23 @@
 Int doWork(Int n) { 
-    if (n == 0) { return(0) ; }
-    else {
-        VM x ; Fut<Int> f; Fut<Int> g ;
-        x = new VM() ;
-        f = x!simpleWork();
-        g = this!doWork(n-1);
-        Int resf = f.get ;
-        release x ;
-        Int resg = g.get ; 
-        return (resf+resg) ; 
-        }
+	if (n == 0) { return(0) ; }
+	else {
+		VM x ; Fut<Int> f; Fut<Int> g ;
+		x = new VM() ;
+		f = x!simpleWork();
+		g = this!doWork(n-1);
+		Int resf = f.get ;
+		release x ;
+		Int resg = g.get ; 
+	return (resf+resg) ; 
+	}
 }
  
 Int simpleWork(){
-    return(1) ;
+	return(1) ;
 }
  
-{   VM m = new VM();
-    Fut<Int> f = m!doWork(100) ; 
-    Int res = f.get ;
+{
+	VM m = new VM();
+	Fut<Int> f = m!doWork(100) ; 
+	Int res = f.get ;
 }
