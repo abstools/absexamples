@@ -7,7 +7,7 @@ Int doubleRelease(VM x, VM y) {
 
 Int user2() {
 	VM x ; Fut<Int> f ;
-	VM x = new vm ;
+	VM x = new VM() ;
 	//perform the call with the same argument repeated
 	//the analyser must keep the arguments' identities
 	f = this!doubleRelease(x, x) ;
@@ -18,6 +18,5 @@ Int user2() {
   Fut<Int> fuser2 = this!user2();
   Int a = fuser2.get;
 }
-
 
 
