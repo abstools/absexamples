@@ -1,0 +1,22 @@
+module FMNoncu; 
+/**
+ * costabs deliverable/2ndReview/Noncumulative.abs -entries C.main -cost_model noncumulative
+ **/
+ 
+class C {
+	Unit main (Int s, Int n) {
+		[x == acquire(3)]
+		Int i = 0; 	
+		[r == acquire(5)]
+		i = 1; 	
+		[r == acquire(s)]
+		i = 2; 	
+		[r == release()]
+		i = 3; 	
+		[y == acquire(n)]
+		i = 4; 	
+		[x == release()]
+		i = 5; 	
+	}
+
+}

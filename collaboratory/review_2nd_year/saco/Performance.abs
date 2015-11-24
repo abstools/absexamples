@@ -1,0 +1,53 @@
+module DemoTraffic;
+import * from ABS.StdLib;
+
+/**
+ * Distribution Level:
+ * costabs deliverable/2ndReview/Performance.abs -entries C.distribution -cost_centers object
+ *
+ * Parallelism: 
+ * costabs deliverable/2ndReview/Performance.abs -entries C.distribution -cost_model cogs
+ * costabs deliverable/2ndReview/Performance.abs -entries C.parallelism -cost_model cogs
+ * 
+ * Traffic:
+ * costabs deliverable/2ndReview/Performance.abs -entries C.distribution -cost_model traffic
+ * 
+ **/
+interface II {
+	Int work (List<Int> l);
+}
+
+class Master implements II {
+ 	Int work (List<Int> l){
+ 		Int n = 0;
+ 		while (l != Nil) {
+			l = tail(l);
+			n = n + 1;
+  		}
+  		return n;
+ 	}
+}
+
+class C {
+	 Unit distribution (List<Int> l, Int n) {
+		II m = new Master();
+		II m2 = new Master();
+
+ 		m!work(l);
+
+		while (n > 0) {
+	 		m2!work(l);
+	 		n = n - 1;
+	 	}
+	 }
+	 
+ 	Unit parallelism (List<Int> l, Int n) {
+		while (n > 0) {
+		    II m = new Master();
+	 		m!work(l);
+	 		n = n - 1;
+	 	}
+	 }
+
+
+}
