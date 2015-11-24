@@ -1,0 +1,23 @@
+Int betterThanAmortized(Int n, Int m, VM x) {
+	Fut<Int> f ; Int z ;
+	if (n==0) return 0;
+	else if (n>m) { 
+		VM v = new VM() ;
+		f = x!betterThanAmortized(n-1,m,v) ; 
+		z = f.get ; 
+		return 0 ;
+	} else { 
+		VM v = new VM() ; 
+		VM w = new VM() ;
+		f = v!betterThanAmortized(n-1,m,w) ; 
+		z = f.get ; 
+		return 0 ; 
+	}
+}
+
+{
+	VM x = new VM() ; Int z ;
+	Fut<Int> f = this!betterThanAmortized(200, 100, x) ;
+	z = f.get ;
+	return 0 ;
+}
