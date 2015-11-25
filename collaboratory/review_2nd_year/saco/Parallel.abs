@@ -5,18 +5,18 @@ module Parallel;
 **/
 
 interface I {
-    Unit p (Int x);
-    Unit q (Int y);
+    Unit work1 (Int x);
+    Unit work2 (Int y);
 }
-class C () implements I{
+class W () implements I{
 
-    Unit p (Int x) {
+    Unit work1 (Int x) {
         while (x > 0) {
             x = x - 1;
         }
         Int method_end = 0;
     }
-    Unit q (Int y) {
+    Unit work2 (Int y) {
         while (y > 0) {
             y = y - 1;
         }
@@ -24,10 +24,10 @@ class C () implements I{
     }
        
     Unit main (Int n, Int m, Int o) {
-        I x = new C ();
-        I y = new C ();
-        x!p(n);
-        y!q(m);
+        I w1 = new W ();
+        I w2 = new W ();
+        w1!work1(n);
+        w2!work2(m);
         while(o > 0) {
         	o = o - 1;
         }

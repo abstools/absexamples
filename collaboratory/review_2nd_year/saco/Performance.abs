@@ -29,19 +29,24 @@ class Master implements II {
 }
 
 class C {
-	 Unit distribution (List<Int> l, Int n) {
-		II m = new Master();
+	 Unit config1 (List<Int> l) {
+		II m1 = new Master();
 		II m2 = new Master();
-
- 		m!work(l);
-
-		while (n > 0) {
-	 		m2!work(l);
-	 		n = n - 1;
-	 	}
+		II m3 = new Master();
+ 		m1!work(l);
+                m1!work(l);
+                m1!work(l);
+	 }
+	 Unit config2 (List<Int> l) {
+		II m1 = new Master();
+		II m2 = new Master();
+		II m3 = new Master();
+ 		m1!work(l);
+                m2!work(l);
+                m3!work(l);
 	 }
 	 
- 	Unit parallelism (List<Int> l, Int n) {
+ 	Unit config3 (List<Int> l, Int n) {
 		while (n > 0) {
 		    II m = new Master();
 	 		m!work(l);
