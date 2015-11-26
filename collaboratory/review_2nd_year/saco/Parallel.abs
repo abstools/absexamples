@@ -1,0 +1,36 @@
+module Parallel;
+
+/**
+* costabs deliverable/2ndReview/Parallel.abs -entries C.main -parallel_cost yes
+**/
+
+interface I {
+    Unit work1 (Int x);
+    Unit work2 (Int y);
+}
+class W () implements I{
+
+    Unit work1 (Int x) {
+        while (x > 0) {
+            x = x - 1;
+        }
+        Int method_end = 0;
+    }
+    Unit work2 (Int y) {
+        while (y > 0) {
+            y = y - 1;
+        }
+        Int method_end = 0;
+    }
+       
+    Unit main (Int n, Int m, Int o) {
+        I w1 = new W ();
+        I w2 = new W ();
+        w1!work1(n);
+        w2!work2(m);
+        while(o > 0) {
+        	o = o - 1;
+        }
+        Int method_end = 0;
+    }
+}
