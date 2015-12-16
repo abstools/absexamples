@@ -1,0 +1,52 @@
+Int producer(Int n) {
+	    Fut<Int> fn = this!compute(n);
+	    Int m = fn.get;
+	    Fut<Int> fm = this!producer(m) ;
+	    Int r = fm.get;
+	    return r ;
+	
+}
+
+Int compute(Int n){
+	if(n > 0){
+        VM x = new VM();
+        Fut<Int> fw = x!someWork(n);
+        Int w = fw.get;
+        Fut<Int> fr = x!consumer(n);
+        Int r = fr.get;
+        release x ;
+        return n -1;
+    }else{
+        VM x = new VM();
+        VM y = new VM();
+        Fut<Int> fw = x!someWork(n);
+        Fut<Int> fw2 = y!someWork(n);
+        Int w = fw.get;
+        Int w2 = fw2.get;
+        Fut<Int> fr = x!consumer(n);
+        Int r = fr.get;
+        Fut<Int> fr2 = y!consumer(n);
+        Int r2 = fr2.get;
+        release x;
+        release y;
+        return n+1 ;
+    }
+    
+}
+
+Int someWork(Int n){
+    return n ;
+}
+
+Int consumer(Int n){
+    VM x = new VM();
+    Fut<Int> fr = x!someWork(n);
+    Int r = fr.get;
+    release x;
+    return 0;
+}
+
+{
+	Fut<Int> res = this!producer(10);
+	Int m = res.get;
+}
