@@ -49,13 +49,13 @@ class ClientGUIImpl([Near] ClientIntern client) implements ClientGUIIntern {
    } 
    
    Unit init2() { 
-   	  Fut<Button> f = gui!new localButton("Send");
+   	  Fut<Button> f = gui!localButton("Send");
    	  sendButton = f.get;
    	  ButtonListener l = new local SendButtonListener(this);
    	  sendButton!registerListener(l);
 
       Fut<TextField> tf;
-      tf = gui!new localTextField();
+      tf = gui!localTextField();
       textField = tf.get;
 
    	  initialized = True;
@@ -139,13 +139,13 @@ interface ButtonListener {
 }
 
 interface Window {
-   [Near] Button new localButton(String label);
-   [Near] TextField new localTextField();
+   [Near] Button localButton(String label);
+   [Near] TextField localTextField();
 }
 
 interface TextField {
    String getText();
-   Unit setText(String new localText);
+   Unit setText(String localText);
 }
 
 interface Button {
@@ -167,11 +167,11 @@ class TextFieldImpl implements TextField {
 
 [COG]
 class WindowImpl implements Window {
-   [Near] Button new localButton(String label) {
+   [Near] Button localButton(String label) {
       return new local ButtonImpl(this, label);
    }
    
-   TextField new localTextField() {
+   TextField localTextField() {
    	  return new local TextFieldImpl();
    }
 }

@@ -13,7 +13,7 @@ class AddrBookImp(Map<UserName,User> users) implements AddrBook {
   
 
       User getUserAddr(UserName u){
-      	      return lookup(users,u);
+      	      return lookupUnsafe(users,u);
       }
 }
 

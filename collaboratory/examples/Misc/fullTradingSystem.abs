@@ -16,7 +16,7 @@ class BankImpl implements Bank {
 	    String res = "";
 	    Maybe<TransactionID> result = Nothing;
 	    TransactionInfo transactionInfo = Pair(0, ""); // NilPair
-	    transactionInfo = lookup(creditCardInfoMap, creditInfo);
+	    transactionInfo = lookupUnsafe(creditCardInfoMap, creditInfo);
 	    if (pin == getPin(transactionInfo)) {
 		res = getId(transactionInfo);
 		result = Just(res);
@@ -146,7 +146,7 @@ class CashBoxImpl implements CashBox {
     }
     
     Unit keyPressed(Key key) {
-	if (key == NEW_SALE_KEY) cashDeskPC!new localSaleStarted();
+	if (key == NEW_SALE_KEY) cashDeskPC!localSaleStarted();
 	if (key == FINISH_SALE_KEY) cashDeskPC!saleFinished();
 	if (key == CASH_PAYMENT_KEY) cashDeskPC!paymentModeSelected(CASH);
 	if (key == CARD_PAYMENT_KEY) cashDeskPC!paymentModeSelected(CARD);
@@ -439,7 +439,7 @@ class CashDeskPCImpl implements CashDeskPC {
 	this.lightDisplay = lightDisplay;
     }
 
-    Unit new localSaleStarted() {
+    Unit localSaleStarted() {
 	if (state == INIT) {
 	    state = SCANNING;
 	    this.amount = money(0, 0);
@@ -971,7 +971,7 @@ interface CardEventReceiver {
 }
 
 interface CashBoxEventReceiver {
-    Unit new localSaleStarted();
+    Unit localSaleStarted();
     Unit saleFinished();
     Unit keypadSend(Int numCode);
     Unit paymentModeSelected(PaymentMode paymentMode);
@@ -1060,7 +1060,7 @@ class InventoryImpl implements Inventory {
 	}
 
 	Product getProductWithStockItem(Int barcode) {
-	    return lookup(this.productDatabase, barcode);
+	    return lookupUnsafe(this.productDatabase, barcode);
 	}
 
 	Unit accountSale(Sale sale) {

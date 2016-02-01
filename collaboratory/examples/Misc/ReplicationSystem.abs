@@ -786,8 +786,8 @@ class ConnectionThreadImpl(
 			Set<Set<File>> filesets = EmptySet;
 			if (register) {
 				Fut<Set<ServerReplicationItem>> nis = snapshot!getItems(ssname(fromJust(cmd)));	
-				await nis?; Set<ServerReplicationItem> new localitems = nis.get;
-				filesets = this.registerItems(new localitems);
+				await nis?; Set<ServerReplicationItem> localitems = nis.get;
+				filesets = this.registerItems(localitems);
 			}
 			
 			// start snapshot
@@ -1528,16 +1528,6 @@ def Set<String> filters(String pattern, Set<String> ts) =
 			};
 	};
 
-//DeploymentComponent
-def Set<DCData> modifyCPU(Set<DCData> ds, Int cpu) =
-	case ds {
-		EmptySet => Insert(CPU(cpu),EmptySet);
-		Insert(x,xs) => 
-			case x {
-				CPU(_) => Insert(CPU(cpu),xs);
-				_ => Insert(x,modifyCPU(xs,cpu));
-			};
-	};
 module ReplicationSystem.Environment.Files;
 export *;
 
@@ -2364,7 +2354,7 @@ def Process edfH(Process h, List<Process> t) =
 	case t {
 		Nil => h;
 		Cons(h2,t2) => 
-			case durationLessThan(procdeadline(h),procdeadline(h2)) {
+			case durationLessThan(procDeadline(h),procDeadline(h2)) {
 				True => edfH(h,t2);
 				False => edfH(h2,t2);
 			};

@@ -79,13 +79,13 @@ case map {
     InsertAssoc(Pair(b,_), tail) => Cons(b, map2list(tail)) ;
 };
 
-def Map<A,B> concatMap<A,B>(Map<A,B> map1, Map<A,B> map2) =
+def Map<Bookname,Bookinfo> concatBookMap(Map<Bookname,Bookinfo> map1, Map<Bookname,Bookinfo> map2) =
 case map1 {
     EmptyMap => map2 ;
     InsertAssoc(head, tail) =>  
     case head {
-        Pair("",NoBook) => concatMap(tail, map2);
-        Pair(k,i) => InsertAssoc(Pair(k, i), concatMap(tail, map2)) ;
+        Pair("",NoBook) => concatBookMap(tail, map2);
+        Pair(k,i) => InsertAssoc(Pair(k, i), concatBookMap(tail, map2)) ;
     };
 };
 
@@ -163,12 +163,12 @@ case books {
 def Map<Bookname,Bookinfo> updateBook(Map<Bookname,Bookinfo> booksDB,Bookname book,Map<Bookname,Bookinfo> bookDB2)  =  
 case booksDB {
     EmptyMap => bookDB2;
-    InsertAssoc(Pair(book,ConsBookinfo(0,w,t)),tail) => concatMap(bookDB2, InsertAssoc(Pair(book,ConsBookinfo(0,w,t)),tail));
-    InsertAssoc(Pair(book,ConsBookinfo(q,w,t)),tail) => concatMap(bookDB2, InsertAssoc(Pair(book,ConsBookinfo(q-1,w,t)),tail));
-    // InsertAssoc(head,tail) =>  updateBook(tail, book,concatMap(bookDB2, InsertAssoc(head,EmptyMap)));
+    InsertAssoc(Pair(book,ConsBookinfo(0,w,t)),tail) => concatBookMap(bookDB2, InsertAssoc(Pair(book,ConsBookinfo(0,w,t)),tail));
+    InsertAssoc(Pair(book,ConsBookinfo(q,w,t)),tail) => concatBookMap(bookDB2, InsertAssoc(Pair(book,ConsBookinfo(q-1,w,t)),tail));
+    // InsertAssoc(head,tail) =>  updateBook(tail, book,concatBookMap(bookDB2, InsertAssoc(head,EmptyMap)));
     // Rewritten for aPET (to avoid having in the nomatch fresh vars not present in the match)
     InsertAssoc(Pair(book2,ConsBookinfo(q,w,t)),tail) => 
-             updateBook(tail, book,concatMap(bookDB2, InsertAssoc(Pair(book2,ConsBookinfo(q,w,t)),EmptyMap)));
+             updateBook(tail, book,concatBookMap(bookDB2, InsertAssoc(Pair(book2,ConsBookinfo(q,w,t)),EmptyMap)));
 };
 
 //***************************************************************************************************
