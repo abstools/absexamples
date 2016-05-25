@@ -75,7 +75,7 @@ interface LoadBalancerService { }
 //enum to specify whether to increase/decrease load balance resource
 data LBOp = INCR | DECR;
 
-[Deploy: scenario[Cost("Cores", 4), Cost("Memory", 8)] ]
+[Deploy: scenario[Cost("Cores", 4), Cost("Memory", 800)] ]
 class LoadBalancerServiceImpl implements LoadBalancerService {
 	// ...
 }
@@ -87,7 +87,7 @@ interface PlatformService { }
 interface MonitorPlatformService extends PlatformService { }
 
 
-[Deploy: scenario[Cost("Cores", 4), Cost("Memory", 12), Param("ls", Req)]]
+[Deploy: scenario[Cost("Cores", 4), Cost("Memory", 1200), Param("ls", Req)]]
 class PlatformServiceImpl(LoadBalancerService ls) 
 implements MonitorPlatformService {
 	// ...
@@ -145,8 +145,8 @@ interface Item {
 interface IQueryService extends Service { }
 
 // Stub implementation of the query service, for use with cost annotations
-[Deploy: scenario[Name("staging"), MaxUse(1), Cost("Cores", 2), Cost("Memory", 800), Param("c", Default("\\\"Customer X\\\"")), Param("staging", Default("True")), Param("ds", Req)] ]
-[Deploy: scenario[Name("live"), MaxUse(1), Cost("Cores", 1), Cost("Memory", 400), Param("c", Default("\\\"Customer X\\\"")), Param("staging", Default("False")), Param("ds", Req)] ]
+[Deploy: scenario[Name("staging"), MaxUse(1), Cost("Cores", 2), Cost("Memory", 700), Param("c", Default("\\\"Customer X\\\"")), Param("staging", Default("True")), Param("ds", Req)] ]
+[Deploy: scenario[Name("live"), MaxUse(1), Cost("Cores", 1), Cost("Memory", 300), Param("c", Default("\\\"Customer X\\\"")), Param("staging", Default("False")), Param("ds", Req)] ]
 class QueryServiceImpl(DeploymentService ds, Customer c, Bool staging) implements IQueryService {
 	// ....
 }
@@ -180,7 +180,7 @@ class ScalingMonitor() implements ScalingMonitor {
 /* JSON ANNOTATION
 {
 	"id": "MainSmartDeployer",
-	"specification": "QueryServiceImpl[staging] > 0 and QueryServiceImpl[staging] + QueryServiceImpl[live] = 2  and LoadBalancerServiceImpl = 1 and PlatformServiceImpl = 1 and ServiceProviderImpl = 1 and (forall ?x in DC: ( ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live] < 2 and ( ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live] = 1 impl ?x.DeploymentServiceImpl > 0) and (?x.ServiceProviderImpl > 0 impl ?x.PlatformServiceImpl > 0) and ( ?x.ServiceProviderImpl > 0 impl  (sum ?y in obj:  ?x.?y) = ?x.ServiceProviderImpl + ?x.PlatformServiceImpl) and (?x.LoadBalancerServiceImpl > 0 impl (sum ?y in obj: ?x.?y) = ?x.LoadBalancerServiceImpl))) and abs((sum ?x in c3_xlarge_eu: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) + (sum ?x in c3_2xlarge_eu: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) - (sum ?x in c3_xlarge_us: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) - (sum ?x in c3_2xlarge_us: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live])) < 2 and (((sum ?x in c3_xlarge_us: ?x.QueryServiceImpl[staging]) + (sum ?x in c3_2xlarge_us: ?x.QueryServiceImpl[staging]) > 0) impl (sum ?x in c3_xlarge_us: ?x.PlatformServiceImpl) + (sum ?x in c3_2xlarge_us: ?x.PlatformServiceImpl) > 0) and (((sum ?x in c3_xlarge_eu: ?x.QueryServiceImpl[staging]) + (sum ?x in c3_2xlarge_eu: ?x.QueryServiceImpl[staging]) > 0) impl (sum ?x in c3_xlarge_eu: ?x.PlatformServiceImpl) + (sum ?x in c3_2xlarge_eu: ?x.PlatformServiceImpl) > 0)",
+	"specification": "QueryServiceImpl['staging'] > 0 and QueryServiceImpl['.*'] = 2  and LoadBalancerServiceImpl = 1 and PlatformServiceImpl = 1 and ServiceProviderImpl = 1 and (forall ?x in DC: ( ?x.QueryServiceImpl['.*'] < 2 and ( ?x.QueryServiceImpl['.*'] = 1 impl ?x.DeploymentServiceImpl > 0) and (?x.ServiceProviderImpl > 0 impl ?x.PlatformServiceImpl > 0) and ( ?x.ServiceProviderImpl > 0 impl  (sum ?y in obj:  ?x.?y) = ?x.ServiceProviderImpl + ?x.PlatformServiceImpl) and (?x.LoadBalancerServiceImpl > 0 impl (sum ?y in obj: ?x.?y) = ?x.LoadBalancerServiceImpl))) and abs((sum ?x in '.*_eu': ?x.QueryServiceImpl['.*']) - (sum ?x in '.*_us': ?x.QueryServiceImpl['.*']) ) < 2 and (((sum ?x in '.*_us': ?x.QueryServiceImpl['staging']) > 0) impl (sum ?x in '.*_us': ?x.PlatformServiceImpl) > 0) and (((sum ?x in '.*_eu': ?x.QueryServiceImpl['staging']) > 0) impl (sum ?x in '.*_eu': ?x.PlatformServiceImpl) > 0)",
 	"DC": [],
 	"obj": [],
 	"cloud_provider_DC_availability" : { "c3_2xlarge_eu" : 3, "c3_2xlarge_us" : 3}
@@ -188,7 +188,7 @@ class ScalingMonitor() implements ScalingMonitor {
 **/
 	
 
-	[ SmartDeploy : "{\"id\":\"MainSmartDeployer\",\"specification\":\"QueryServiceImpl[staging] > 0 and QueryServiceImpl[staging] + QueryServiceImpl[live] = 2  and LoadBalancerServiceImpl = 1 and PlatformServiceImpl = 1 and ServiceProviderImpl = 1 and (forall ?x in DC: ( ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live] < 2 and ( ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live] = 1 impl ?x.DeploymentServiceImpl > 0) and (?x.ServiceProviderImpl > 0 impl ?x.PlatformServiceImpl > 0) and ( ?x.ServiceProviderImpl > 0 impl  (sum ?y in obj:  ?x.?y) = ?x.ServiceProviderImpl + ?x.PlatformServiceImpl) and (?x.LoadBalancerServiceImpl > 0 impl (sum ?y in obj: ?x.?y) = ?x.LoadBalancerServiceImpl))) and abs((sum ?x in c3_xlarge_eu: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) + (sum ?x in c3_2xlarge_eu: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) - (sum ?x in c3_xlarge_us: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) - (sum ?x in c3_2xlarge_us: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live])) < 2 and (((sum ?x in c3_xlarge_us: ?x.QueryServiceImpl[staging]) + (sum ?x in c3_2xlarge_us: ?x.QueryServiceImpl[staging]) > 0) impl (sum ?x in c3_xlarge_us: ?x.PlatformServiceImpl) + (sum ?x in c3_2xlarge_us: ?x.PlatformServiceImpl) > 0) and (((sum ?x in c3_xlarge_eu: ?x.QueryServiceImpl[staging]) + (sum ?x in c3_2xlarge_eu: ?x.QueryServiceImpl[staging]) > 0) impl (sum ?x in c3_xlarge_eu: ?x.PlatformServiceImpl) + (sum ?x in c3_2xlarge_eu: ?x.PlatformServiceImpl) > 0)\",\"DC\":[],\"obj\":[],\"cloud_provider_DC_availability\":{\"c3_2xlarge_eu\":2,\"c3_2xlarge_us\":2}}" ]
+	[ SmartDeploy : "{\"id\":\"MainSmartDeployer\",\"specification\":\"QueryServiceImpl['staging'] > 0 and QueryServiceImpl['.*'] = 2  and LoadBalancerServiceImpl = 1 and PlatformServiceImpl = 1 and ServiceProviderImpl = 1 and (forall ?x in DC: ( ?x.QueryServiceImpl['.*'] < 2 and ( ?x.QueryServiceImpl['.*'] = 1 impl ?x.DeploymentServiceImpl > 0) and (?x.ServiceProviderImpl > 0 impl ?x.PlatformServiceImpl > 0) and ( ?x.ServiceProviderImpl > 0 impl  (sum ?y in obj:  ?x.?y) = ?x.ServiceProviderImpl + ?x.PlatformServiceImpl) and (?x.LoadBalancerServiceImpl > 0 impl (sum ?y in obj: ?x.?y) = ?x.LoadBalancerServiceImpl))) and abs((sum ?x in '.*_eu': ?x.QueryServiceImpl['.*']) - (sum ?x in '.*_us': ?x.QueryServiceImpl['.*']) ) < 2 and (((sum ?x in '.*_us': ?x.QueryServiceImpl['staging']) > 0) impl (sum ?x in '.*_us': ?x.PlatformServiceImpl) > 0) and (((sum ?x in '.*_eu': ?x.QueryServiceImpl['staging']) > 0) impl (sum ?x in '.*_eu': ?x.PlatformServiceImpl) > 0)\",\"DC\":[],\"obj\":[],\"cloud_provider_DC_availability\":{\"c3_2xlarge_eu\":2,\"c3_2xlarge_us\":2}}" ]
 	SmartDeployInterface c1 = new MainSmartDeployer(cloudProvider);
 	c1.deploy();
 
@@ -200,7 +200,7 @@ class ScalingMonitor() implements ScalingMonitor {
 /** JSON ANNOTATION
 {
   "id": "AddQueryDeployer",
-  "specification": "QueryServiceImpl[live] = 3 and (forall ?x in DC: ( ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live] < 2 and ( ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live] = 1 impl ?x.DeploymentServiceImpl > 0) and (?x.ServiceProviderImpl > 0 impl ?x.PlatformServiceImpl > 0) and ( ?x.ServiceProviderImpl > 0 impl  (sum ?y in obj:  ?x.?y) = ?x.ServiceProviderImpl + ?x.PlatformServiceImpl) and (?x.LoadBalancerServiceImpl > 0 impl (sum ?y in obj: ?x.?y) = ?x.LoadBalancerServiceImpl))) and abs((sum ?x in c3_xlarge_eu: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) + (sum ?x in c3_2xlarge_eu: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) - (sum ?x in c3_xlarge_us: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) - (sum ?x in c3_2xlarge_us: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live])) < 2 and (((sum ?x in c3_xlarge_us: ?x.QueryServiceImpl[staging]) + (sum ?x in c3_2xlarge_us: ?x.QueryServiceImpl[staging]) > 0) impl (sum ?x in c3_xlarge_us: ?x.PlatformServiceImpl) + (sum ?x in c3_2xlarge_us: ?x.PlatformServiceImpl) > 0) and (((sum ?x in c3_xlarge_eu: ?x.QueryServiceImpl[staging]) + (sum ?x in c3_2xlarge_eu: ?x.QueryServiceImpl[staging]) > 0) impl (sum ?x in c3_xlarge_eu: ?x.PlatformServiceImpl) + (sum ?x in c3_2xlarge_eu: ?x.PlatformServiceImpl) > 0)",
+  "specification": "QueryServiceImpl['live'] = 2 and (forall ?x in DC: ( ?x.QueryServiceImpl['.*'] < 2 and ( ?x.QueryServiceImpl['.*'] = 1 impl ?x.DeploymentServiceImpl > 0) and (?x.ServiceProviderImpl > 0 impl ?x.PlatformServiceImpl > 0) and ( ?x.ServiceProviderImpl > 0 impl  (sum ?y in obj:  ?x.?y) = ?x.ServiceProviderImpl + ?x.PlatformServiceImpl) and (?x.LoadBalancerServiceImpl > 0 impl (sum ?y in obj: ?x.?y) = ?x.LoadBalancerServiceImpl))) and abs((sum ?x in '.*_eu': ?x.QueryServiceImpl['.*']) - (sum ?x in '.*_us': ?x.QueryServiceImpl['.*']) ) < 2 and (((sum ?x in '.*_us': ?x.QueryServiceImpl['staging']) > 0) impl (sum ?x in '.*_us': ?x.PlatformServiceImpl) > 0) and (((sum ?x in '.*_eu': ?x.QueryServiceImpl['staging']) > 0) impl (sum ?x in '.*_eu': ?x.PlatformServiceImpl) > 0)",
   "DC": [],
   "obj": [
     {
@@ -250,11 +250,11 @@ class ScalingMonitor() implements ScalingMonitor {
 		ScaleDecision scale_decision =
 			m.scale();
 		if (scale_decision == ScaleUp) {
-			[ SmartDeploy : "{\"id\":\"AddQueryDeployer\",\"specification\":\"QueryServiceImpl[live] = 3 and (forall ?x in DC: ( ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live] < 2 and ( ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live] = 1 impl ?x.DeploymentServiceImpl > 0) and (?x.ServiceProviderImpl > 0 impl ?x.PlatformServiceImpl > 0) and ( ?x.ServiceProviderImpl > 0 impl  (sum ?y in obj:  ?x.?y) = ?x.ServiceProviderImpl + ?x.PlatformServiceImpl) and (?x.LoadBalancerServiceImpl > 0 impl (sum ?y in obj: ?x.?y) = ?x.LoadBalancerServiceImpl))) and abs((sum ?x in c3_xlarge_eu: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) + (sum ?x in c3_2xlarge_eu: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) - (sum ?x in c3_xlarge_us: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live]) - (sum ?x in c3_2xlarge_us: ?x.QueryServiceImpl[staging] + ?x.QueryServiceImpl[live])) < 2 and (((sum ?x in c3_xlarge_us: ?x.QueryServiceImpl[staging]) + (sum ?x in c3_2xlarge_us: ?x.QueryServiceImpl[staging]) > 0) impl (sum ?x in c3_xlarge_us: ?x.PlatformServiceImpl) + (sum ?x in c3_2xlarge_us: ?x.PlatformServiceImpl) > 0) and (((sum ?x in c3_xlarge_eu: ?x.QueryServiceImpl[staging]) + (sum ?x in c3_2xlarge_eu: ?x.QueryServiceImpl[staging]) > 0) impl (sum ?x in c3_xlarge_eu: ?x.PlatformServiceImpl) + (sum ?x in c3_2xlarge_eu: ?x.PlatformServiceImpl) > 0)\",\"DC\":[],\"obj\":[{\"name\":\"platformObj\",\"provides\":[{\"ports\":[\"MonitorPlatformService\",\"PlatformService\"],\"num\":-1}],\"interface\":\"PlatformService\"},{\"name\":\"loadBalancerObj\",\"provides\":[{\"ports\":[\"LoadBalancerService\"],\"num\":-1}],\"interface\":\"LoadBalancerService\"},{\"name\":\"serviceProviderObj\",\"provides\":[{\"ports\":[\"ServiceProvider\"],\"num\":-1}],\"interface\":\"ServiceProvider\"}]}" ]
+			[ SmartDeploy : "{\"id\":\"AddQueryDeployer\",\"specification\":\"QueryServiceImpl['live'] = 2 and (forall ?x in DC: ( ?x.QueryServiceImpl['.*'] < 2 and ( ?x.QueryServiceImpl['.*'] = 1 impl ?x.DeploymentServiceImpl > 0) and (?x.ServiceProviderImpl > 0 impl ?x.PlatformServiceImpl > 0) and ( ?x.ServiceProviderImpl > 0 impl  (sum ?y in obj:  ?x.?y) = ?x.ServiceProviderImpl + ?x.PlatformServiceImpl) and (?x.LoadBalancerServiceImpl > 0 impl (sum ?y in obj: ?x.?y) = ?x.LoadBalancerServiceImpl))) and abs((sum ?x in '.*_eu': ?x.QueryServiceImpl['.*']) - (sum ?x in '.*_us': ?x.QueryServiceImpl['.*']) ) < 2 and (((sum ?x in '.*_us': ?x.QueryServiceImpl['staging']) > 0) impl (sum ?x in '.*_us': ?x.PlatformServiceImpl) > 0) and (((sum ?x in '.*_eu': ?x.QueryServiceImpl['staging']) > 0) impl (sum ?x in '.*_eu': ?x.PlatformServiceImpl) > 0)\",\"DC\":[],\"obj\":[{\"name\":\"platformObj\",\"provides\":[{\"ports\":[\"MonitorPlatformService\",\"PlatformService\"],\"num\":-1}],\"interface\":\"PlatformService\"},{\"name\":\"loadBalancerObj\",\"provides\":[{\"ports\":[\"LoadBalancerService\"],\"num\":-1}],\"interface\":\"LoadBalancerService\"},{\"name\":\"serviceProviderObj\",\"provides\":[{\"ports\":[\"ServiceProvider\"],\"num\":-1}],\"interface\":\"ServiceProvider\"}]}" ]
 			SmartDeployInterface c2 = new AddQueryDeployer(cloudProvider,head(platformServices),head(loadBalancerServices),head(serviceProviders));
 			c2.deploy();
 			depl_list = Cons(c2,depl_list);
-		} else if ((scale_decision == ScaleUp) && (depl_list != Nil)) {
+		} else if ((scale_decision == ScaleDown) && (depl_list != Nil)) {
 			SmartDeployInterface c2 = head(depl_list);
 			depl_list = tail(depl_list);
 			c2.undeploy();
