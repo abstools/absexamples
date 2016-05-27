@@ -1,0 +1,68 @@
+module PipeSort;
+import * from ABS.StdLib;
+
+interface FeederInt{
+    Unit feed(List<Int> list);
+    Unit feedIter(List<Int> list);
+    Unit feedNTimes(Int n,List<Int> list);
+    Unit feed2Times(List<Int> list);
+}
+
+interface NodeInt{
+    Unit push(Int val);
+}
+
+class Feeder (NodeInt first) implements FeederInt {
+
+    Unit feed(List<Int> list){
+	if (isEmpty(list) == False) {
+	    first!push(head(list));
+	    this!feed(tail(list));
+	}
+    }
+
+    Unit feedIter(List<Int> list){
+	while (isEmpty(list) == False) {
+	    first!push(head(list));
+	    list = tail(list);
+	}
+    }
+
+    Unit feedNTimes(Int n,List<Int> list){
+	while (n > 0){
+	    this!feedIter(list);
+	    n = n-1;
+	}
+    }
+
+    Unit feed2Times(List<Int> list){
+	this!feedIter(list);
+	this!feedIter(list);
+    }
+}
+
+class Node implements NodeInt{
+    NodeInt next = null;
+    Int myval = 0;
+    Bool first = True;
+
+    Unit push(Int val){
+	if (first == True) {
+	    myval = val;
+	    first = False;
+	} else {
+	    if (next == null) next = new  Node();
+	    if (val >= myval) next!push(val);
+	    else { //val < myval
+		next!push(myval);
+		myval = val;
+	    }
+	}
+    }
+}
+
+{
+    NodeInt first = new Node();
+    FeederInt feeder = new Feeder(first);
+    feeder!feed(list[7,11,5]);
+}

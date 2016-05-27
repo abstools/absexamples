@@ -1,0 +1,70 @@
+module Pi;
+import * from ABS.StdLib;
+
+type Double = Int;
+
+interface MasterInt{
+    Unit boot(Int n);
+    Unit sum(Double p);
+}
+
+interface WorkerInt{
+    Unit intervals(MasterInt master, Int n);
+    Unit stop();
+}
+
+class Master (List<WorkerInt> workers) implements MasterInt{
+
+    Int counter = 0;
+    Int result = 0;
+
+    Unit boot(Int n) {
+	List<WorkerInt> ws = workers;
+	WorkerInt w = null;
+	while (isEmpty(ws) == False){
+	    w = head(ws);
+	    w!intervals(this,n);
+	    ws = tail(ws);
+	}
+    }
+    
+    Unit sum(Double p) {
+	counter = counter + 1;
+	result = result + p;
+	if (counter == length(workers)) {
+	    List<WorkerInt> ws = workers;
+	    WorkerInt w = null;
+	    while (isEmpty(ws) == False){
+		w = head(ws);
+		w!stop();
+		ws = tail(ws);
+	    }
+	}
+    }
+}
+
+class Worker (Int id,Int numWorkers) implements WorkerInt{
+
+    Unit intervals(MasterInt master, Int n) {
+	Double h = 1/n;
+	Double sum = 0;
+	Int i = id; 
+	while (i <= n){
+	    //Double x = h * (i - 0.5);
+	    Double x = h * (i - 5);
+	    sum = sum + (4/(1 + x*x));
+	    i = i + numWorkers;
+	}
+	master!sum(h*sum);
+    }
+
+    Unit stop(){}
+}
+
+{
+    WorkerInt w0 = new Worker(0,3);
+    WorkerInt w1 = new Worker(1,3);
+    WorkerInt w2 = new Worker(2,3);
+    MasterInt master = new Master(list[w0,w1]);
+    master!boot(2);
+}

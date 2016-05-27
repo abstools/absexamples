@@ -1,0 +1,35 @@
+module Foo;
+import * from ABS.StdLib;
+
+interface NodeInt{
+    Unit broadcast(Int n);
+    Unit setNext(NodeInt n);
+}
+
+class Node implements NodeInt{
+    NodeInt next = null;
+    Bool sent = False;
+
+    Unit broadcast(Int n){
+	if (next != null){
+	    if (sent == False) {
+		next!broadcast(n);
+		sent = True;
+	    }
+	}
+    }
+    
+    Unit setNext(NodeInt n){
+	this.next = n;
+    }
+}
+
+{
+    NodeInt n1 = new Node();
+    NodeInt n2 = new Node();
+    NodeInt n3 = new Node();
+    n1!setNext(n2);
+    n2!setNext(n3);
+    n3!setNext(n1);
+    n1!broadcast(11);
+}
