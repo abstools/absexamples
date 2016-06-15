@@ -16,22 +16,25 @@ class Registry implements RegInt{
     List<Int> others = Nil;
     List<Int> workers = Nil;
     Unit r0(Int id){
-	others = appendright(others,id);
+        others = appendright(others,id);
     }
+
     Unit r1(Int id){
-	workers = appendright(workers,id);
+        workers = appendright(workers,id);
     }
+
     Unit r2(Int id){
-	workers = appendright(workers,id);
+        workers = appendright(workers,id);
     }
 }
 
 class Worker(Int id) implements WorkerInt{
     Unit w1(RegInt r){
-	r!r1(id);
+        r!r1(id);
     }
+
     Unit w2(RegInt r){
-	r!r2(id);
+        r!r2(id);
     }
 }
 

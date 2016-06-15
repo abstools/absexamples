@@ -17,26 +17,23 @@ class Fact(FactInt boss,Int maxH) implements FactInt{
     Int r = 1;
     
     Unit fact(Int n) {
-	//if (maxH > 0){
-	if (n > maxH){
+        if (n > maxH){
 	    this!work(n,maxH);
-	    //FactInt worker = new cog Fact(this,maxH);
-	    //worker!fact(n-maxH);
-	    this!delegate(n-maxH);
-	} 
-	else {
-	    this!work(n,n);
-	    this!report(1);
-	}
-	//}
+            //FactInt worker = new cog Fact(this,maxH);
+            //worker!fact(n-maxH);
+            this!delegate(n-maxH);
+        } else {
+            this!work(n,n);
+            this!report(1);
+        }
     }
 
     Unit work(Int n,Int h){
-	while (h > 0){
-	    r = r*n;
-	    n = n-1;
-	    h = h-1;
-	}
+        while (h > 0){
+            r = r*n;
+            n = n-1;
+            h = h-1;
+        }
     }
 	
     Unit delegate(Int n){
@@ -45,15 +42,15 @@ class Fact(FactInt boss,Int maxH) implements FactInt{
     }
 
     Unit report(Int x) {
-	r = r*x;
-	if (boss != null) boss!report(r);
+        r = r*x;
+        if (boss != null) boss!report(r);
     }
 } 
 
 class Runner implements RunnerInt{
     Unit fact(Int n,Int h){
-	FactInt f = new Fact(null,h);
-	f!fact(n);	
+        FactInt f = new Fact(null,h);
+        f!fact(n);	
     }
 }
 
