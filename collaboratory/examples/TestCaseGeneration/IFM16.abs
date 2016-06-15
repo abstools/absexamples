@@ -24,9 +24,9 @@ class DBimp(Data dt) implements DB {
 
     Data getData(Worker w){
         Data n = DataNull;
-	if (client == w) n = this.dt;
+        if (client == w) n = this.dt;
         else n = DataNull;
-	return n;
+        return n;
     }	   
 }
 
@@ -37,6 +37,7 @@ class WorkerImp() implements Worker {
        Fut<Data> f = db!getData(this);
        this.datum = f.get;
     }
+
     Int ping(Int n){
        Int m = n;
        return n;
