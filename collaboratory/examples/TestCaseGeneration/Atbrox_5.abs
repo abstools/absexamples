@@ -1,0 +1,222 @@
+module Atbrox;
+//import * from ABS.StdLib;
+//import * from ABS.DC;
+
+type Key = Int;
+type Value = Int;
+type Values = List<Int>;
+type Input = List<Pair<Key,Values>>;
+type Output =  List<Pair<Key,Values>>;
+
+
+//-----------------------------------------------------------------------
+// Auxiliary functions
+//-----------------------------------------------------------------------
+
+// it returns the list of values associated to "key" in the list "intermediates"
+def Values lookupValuesForKey(Output intermediates, Key key) =
+case (intermediates) {
+    Nil => Nil;
+    Cons(Pair(k,vls),tail) =>
+    case (k) {
+        key => vls;
+        _   => lookupValuesForKey(tail,key);
+    };
+};
+
+// looks for "key" in "intermediates" and replaces <key,values> with <key,final_values>
+def Output change_element(Output intermediates, Key key, Values final_values) =
+case (intermediates) {
+    Nil => Cons(Pair(key,final_values),Nil);
+    Cons(Pair(k,vls),tail) =>
+    case (k) {
+        key => Cons(Pair(key,final_values),tail);
+        _   => Cons(Pair(k,vls), change_element(tail,key,final_values));
+    };
+};
+          
+
+// computes the list of keys of the "intermediate" list,i.e., the list composed of 
+// the first components of each  pair in the list 
+def List<Key> computeKeys(Output intermediates) =
+case (intermediates) {
+    Nil => Nil;
+    Cons(Pair(k,vls),tail) => Cons(k,computeKeys(tail));
+};
+
+
+// removes the value "v" from the list "values"
+def Values removeFromList(Value v, Values values) =
+case (values) {
+    Nil => Nil;
+    Cons(v1,tail) =>
+    case (v1) {
+        v => removeFromList(v,tail);
+        _ => Cons(v1,removeFromList(v,tail));
+    };
+};
+
+     
+//---------------------------------------------------------------------------
+// MapReduce
+//---------------------------------------------------------------------------
+interface MapReduce {
+    Output mapReduce(Input input);
+    Unit finished(Worker w);
+    Unit finishedAndKillWorker(Worker w);
+}
+
+class MapReduce(Int maxMachines) implements MapReduce {
+    List<Worker> workers = Nil;
+    Int nWorkers = 0;
+    
+    // Input = [(1,[7,9,7]),(2,[9,12,12]),(3,[7,12,7])]
+    // Output = [(7,[1,3]),(9,[1,2]),(12,[2,3])]
+    Output mapReduce(Input input) {
+        List<Fut<List<Pair<Key,Value>>>> fMapResults = Nil;     
+        Output intermediates = Nil;
+        List<Pair<Key, Fut<Values>>> fReduceResults = Nil;
+        List<Pair<Key,Values>> result = Nil;
+        Pair<Key,Values> item = Pair(0,Nil); 
+        Int key = 0;
+        List<Pair<Key,Value>> mapResult = Nil;
+        Values values = Nil;
+        Values inter = Nil;
+        Values final_values = Nil;
+        Worker w;
+        Fut<Worker> fw;
+        Fut<List<Pair<Key,Value>>> fMap;
+	Pair<Key,Value> keyValuePair = Pair(0,0);
+        List<Key> keys = Nil;
+        Fut<Values> fReduce;
+        Fut<Values> fValues;
+	
+	// MAP: Input = [(1,[7,9,7]),(2,[9,12,12]),(3,[7,12,7])]
+        while (~isEmpty(input)) {
+            item = head(input);
+            key = fst(item);
+            values = snd(item);
+            input = tail(input);
+	    fw = this ! getWorker();
+            await fw?; 
+            w = fw.get;
+            fMap = w ! invokeMap(key,values); // key=1, values=[7,9,7] => [(7,1),(9,1),(7,1)]
+            fMapResults = appendright(fMapResults, fMap);
+        }
+        // Output de Map: [(7,1),(9,1),(7,1),(9,2),(12,2),(12,2),(7,3),(12,3),(7,3)]   
+        // INTERMEDIATE LOOP: Takes as input the Output of Map
+        
+        while (~isEmpty(fMapResults)) {
+            fMap = head(fMapResults);
+            fMapResults = tail(fMapResults);
+            await fMap?;
+            mapResult = fMap.get;
+            while (~isEmpty(mapResult)) {
+                keyValuePair = head(mapResult);
+                mapResult = tail(mapResult);
+                key = fst(keyValuePair);
+                inter = lookupValuesForKey(intermediates, key);
+                final_values = appendright(inter,snd(keyValuePair));
+                intermediates = change_element(intermediates,fst(keyValuePair),final_values);
+            }
+        }
+        // Output of the intermediate loop: [(7,[1,1,3,3]),(9,[1,2]),(12,[2,2,3])]
+        
+        // REDUCE:
+        keys = computeKeys(intermediates);
+        // keys = [7,9,12]
+        while(keys != Nil) {   
+            key = head(keys);
+            keys = tail(keys);      
+            values = lookupValuesForKey(intermediates,key);
+            fw = this ! getWorker();
+            await fw?; 
+            w = fw.get;
+            fReduce = w ! invokeReduce(key, values);
+            fReduceResults = appendright(fReduceResults,Pair(key,fReduce));
+        }
+        // returns [(7,[1,3]),(9,[1,2]),(12,[2,3])]
+	
+        while (~isEmpty(fReduceResults)) {
+            Pair<Key, Fut<Values>> reduceResult = head(fReduceResults);
+            fReduceResults = tail(fReduceResults);
+            key = fst(reduceResult);
+            fValues = snd(reduceResult);
+            await fValues?;
+            values = fValues.get;
+            result = appendright(result,Pair(key, values));
+        }
+        return result;   
+    } 
+             
+    Worker getWorker() {
+	Worker w;
+	Worker result;
+        if (workers == Nil) {
+            if (nWorkers < maxMachines) {
+                w = new Worker(this);
+                nWorkers = nWorkers + 1;
+                workers = appendright(workers,w);
+            }
+            await ~(workers == Nil);
+        }
+        result = head(workers);
+        workers = tail(workers);
+        return result;
+    }
+    
+    Unit finished(Worker w) {
+        workers = appendright(workers,w);
+    }
+
+    Unit finishedAndKillWorker(Worker w) {
+	nWorkers = nWorkers - 1;
+    }
+}
+
+
+interface Worker {
+    List<Pair<Key,Value>> invokeMap(Key key, Values values);
+    Values invokeReduce(Key key, Values value);
+}
+
+class Worker(MapReduce master) implements Worker {
+
+    List<Pair<Key,Value>> invokeMap(Key key, Values values){
+        Value h = 0;
+        List<Pair<Key, Value>> mapResults = Nil;
+        while(values != Nil) {
+            h = head(values);
+            values = tail(values);
+            mapResults = appendright(mapResults,Pair(h,key)); 
+        } 
+        master ! finished(this);
+        return mapResults;
+    }
+    
+    Values invokeReduce(Key key, Values values) {
+        Value v1 = 0;
+        Values reduceResults = Nil;
+        
+        // remove duplicates values from values
+        while (values != Nil) {
+            v1 = head(values);
+            values = removeFromList(v1,values);
+            reduceResults = appendright(reduceResults,v1);
+        }
+        master ! finishedAndKillWorker(this);
+        return reduceResults;
+    }
+}
+
+// Main
+{
+    
+    //Input input = list[Pair(1,list[7,9,7]),Pair(2,list[9,12,12]),Pair(3,list[7,12,7])];
+    Input input = list[Pair(1,list[7,7]),Pair(2,list[9])];
+    //Input input = list[Pair(1,list[7,9,7])];
+    //Input input = list[Pair(1,list[2])];
+    MapReduce m = new MapReduce(2);
+    m ! mapReduce(input);    
+}
+
