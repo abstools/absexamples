@@ -151,6 +151,7 @@ public class EITest extends FrontendTest {
 , { "../collaboratory/examples/TestCaseGeneration/Fact.abs", null }
 , { "../collaboratory/examples/TestCaseGeneration/Forte14v2.abs", null }
 , { "../collaboratory/examples/TestCaseGeneration/IFM16.abs", null }
+, { "../collaboratory/examples/TestCaseGeneration/PPDP16.abs", null }
 , { "../collaboratory/review_2nd_year/erlbackend/Arithm.abs", null }
 , { "../collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs", null }
 , { "../collaboratory/review_2nd_year/erlbackend/HelloWorld.abs", null }
