@@ -13,7 +13,7 @@ interface A {
 class A implements A {
    Fut<A> m(){
 	A x = new A();
-	Fut<A> y = x!m();
+	Fut<Fut<A>> y = x!m();
 	await y?;
 	return y;
    }

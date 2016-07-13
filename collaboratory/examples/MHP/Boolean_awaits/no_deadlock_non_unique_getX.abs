@@ -26,8 +26,6 @@ class Bimp implements B {
     Unit go(A a) {
 	Fut<C> f = a!getX();
 	await f?;
-	Fut<C> f = a!getX();
-	await f?;
 	Fut<Unit> g = a!p();
 	g.get;
 	C x = f.get;

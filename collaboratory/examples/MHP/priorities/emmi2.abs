@@ -7,7 +7,7 @@ In SIGSOFT FSE, page 48. ACM, 2012.
 module Emmi2;
 
 interface Emmi2I{
-  Unit main2( Int x );
+  Unit main2();
   Unit main1();
   Unit bar();
 }

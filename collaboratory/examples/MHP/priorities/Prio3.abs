@@ -1,7 +1,7 @@
 module Prio2;
 
 interface A{
-  Unit f();
+  Unit f(Int i);
   Unit g();
   Unit h();
 }

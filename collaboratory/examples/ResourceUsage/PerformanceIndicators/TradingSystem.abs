@@ -171,7 +171,7 @@ class CashBoxImpl implements CashBox {
     
     [cashDeskPC == max(cashDeskPC)][cashBoxEnv == max(cashBoxEnv)][screen == max(screen)][intBuffer <= max(intBuffer)]
     Unit keyPressed(Key key) {
-		if (key == NEW_SALE_KEY) cashDeskPC!new localSaleStarted();
+		if (key == NEW_SALE_KEY) cashDeskPC!newSaleStarted();
 		if (key == FINISH_SALE_KEY) cashDeskPC!saleFinished();
 		if (key == CASH_PAYMENT_KEY) cashDeskPC!paymentModeSelected(CASH);
 		if (key == CARD_PAYMENT_KEY) cashDeskPC!paymentModeSelected(CARD);
@@ -517,7 +517,7 @@ class CashDeskPCImpl implements CashDeskPC {
 		this.lightDisplay = lightDisplay;
     }
 
-    Unit new localSaleStarted() {
+    Unit newSaleStarted() {
 	if (state == INIT) {
 	    state = SCANNING;
 	    this.amount = money(0, 0);
@@ -1114,7 +1114,7 @@ interface CardEventReceiver {
 }
 
 interface CashBoxEventReceiver {
-    Unit new localSaleStarted();
+    Unit newSaleStarted();
     Unit saleFinished();
     Unit keypadSend(Int numCode);
     Unit paymentModeSelected(PaymentMode paymentMode);

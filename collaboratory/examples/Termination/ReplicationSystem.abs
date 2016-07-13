@@ -1891,8 +1891,8 @@ class ConnectionThreadImpl([Far]ClientJob job, [Far]SyncServer server, [Far]Reso
       if ( register ){
         Fut<Set<ServerReplicationItem>> nis = snapshot!getItems(ssname(fromJust(cmd)));
         await nis?;
-        Set<ServerReplicationItem> new localitems = nis.get;
-        filesets = this.registerItems(new localitems);
+        Set<ServerReplicationItem> newitems = nis.get;
+        filesets = this.registerItems(newitems);
       }
       this.consumeResource(2);
       Fut<Unit> rp = job!command(StartSnapShot);

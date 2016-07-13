@@ -10,7 +10,9 @@ interface TaskQueueInter{
   Unit consumeSync();
 }
 
-class TaskQueue( List<Task> pending) implements TaskQueueInter {
+class TaskQueue() implements TaskQueueInter {
+
+List<Task> pending = Nil;
   
 Unit addTask(Task tk){
   pending = appendright(pending,tk);

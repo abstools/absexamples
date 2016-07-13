@@ -49,7 +49,7 @@ class AImpl(Int field) implements A {
     Fut<Int> x = this ! f();
     await x?;
     Int important_value = x.get;
-    this ! g(important_value);
+    this ! g();
   }
   
   [priority(6)] Unit g()

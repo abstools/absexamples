@@ -27,7 +27,7 @@ interface CardEventReceiver {
   Unit sendCreditInfoAndPin(CreditInfo creditInfo, Int pin);}
 
 interface CashBoxEventReceiver {
-  Unit new localSaleStarted();
+  Unit newSaleStarted();
   Unit saleFinished();
   Unit keypadSend(Int numCode);
   Unit paymentModeSelected(PaymentMode paymentMode);
@@ -201,7 +201,7 @@ class CashBoxImpl implements CashBox {
     cashDeskPC!moneyReceived();
   }
   Unit keyPressed(Key key){
-    if ( ( key == NEW_SALE_KEY ) )cashDeskPC!new localSaleStarted();
+    if ( ( key == NEW_SALE_KEY ) )cashDeskPC!newSaleStarted();
     if ( ( key == FINISH_SALE_KEY ) )cashDeskPC!saleFinished();
     if ( ( key == CASH_PAYMENT_KEY ) )cashDeskPC!paymentModeSelected(CASH);
     if ( ( key == CARD_PAYMENT_KEY ) )cashDeskPC!paymentModeSelected(CARD);
@@ -288,7 +288,7 @@ class CashDeskPCImpl implements CashDeskPC {
     this.expressCoordinator = expressCoordinator;
     this.lightDisplay = lightDisplay;
   }
-  Unit new localSaleStarted(){
+  Unit newSaleStarted(){
     if ( ( state == INIT ) ){
       state = SCANNING;
       amount = money(0, 0);

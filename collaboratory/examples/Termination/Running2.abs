@@ -10,7 +10,8 @@ interface TaskQueueInter{
   Unit consumeSync();
 }
 
-class TaskQueue( List<Task> pending) implements TaskQueueInter {
+class TaskQueue() implements TaskQueueInter {
+  List<Task> pending = Nil;
   
 Unit addTask(Task tk){
   pending = appendright(pending,tk);
@@ -61,8 +62,8 @@ class TaskImpl implements Task{
   Task t3 = new local TaskImpl();  
   List<Task> l = Cons( t1, Cons( t2, Cons( t3, Nil)));
   
-  TaskQueueInter q = new local TaskQueue();
-  Fut<Unit> f = q!addTasks(l);
+  TaskQueueInter q = new local TaskQueue(0);
+  Fut<Unit> f = q!addTasks();
   await f?;
   q!consumeSync();
 }

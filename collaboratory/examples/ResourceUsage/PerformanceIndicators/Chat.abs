@@ -1,4 +1,4 @@
-	module ABSChat.Main;
+module ABSChat.Main;
 
 data ServerMsg = Welcome
    	           | GoodBye
@@ -49,13 +49,13 @@ class ClientGUIImpl( ClientIntern client) implements ClientGUIIntern {
    } 
    
    Unit init2() { 
-   	  Fut<Button> f = gui!new localButton("Send");
+   	  Fut<Button> f = gui!newButton("Send");
    	  sendButton = f.get;
    	  ButtonListener l = new SendButtonListener(this);
    	  sendButton!registerListener(l);
 
       Fut<TextField> tf;
-      tf = gui!new localTextField();
+      tf = gui!newTextField();
       textField = tf.get;
 
    	  initialized = True;
@@ -143,13 +143,13 @@ interface ButtonListener {
 }
 
 interface Window {
-    Button new localButton(String label);
-    TextField new localTextField();
+    Button newButton(String label);
+    TextField newTextField();
 }
 
 interface TextField {
    String getText();
-   Unit setText(String new localText);
+   Unit setText(String newText);
 }
 
 interface Button {
@@ -171,12 +171,12 @@ class TextFieldImpl implements TextField {
 
 [COG]
 class WindowImpl implements Window {
-    Button new localButton(String label) {
+    Button newButton(String label) {
       Button b = new ButtonImpl(this, label);
       return b;
    }
    
-   TextField new localTextField() {
+   TextField newTextField() {
       TextField t = new TextFieldImpl();
    	  return t;
    }

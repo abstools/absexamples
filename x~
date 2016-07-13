@@ -1,0 +1,502 @@
+./collaboratory/deliverables/D3.3.2/CoFloCo.abs:1:0:Warning: no main block found.
+module Parallel;
+^
+./collaboratory/deliverables/D3.3.2/DataTransmitted.abs:1:0:Warning: no main block found.
+module DemoTraffic;
+^
+./collaboratory/deliverables/D3.3.2/Noncumulative.abs:1:0:Warning: no main block found.
+module Noncumulative;
+^
+./collaboratory/deliverables/D3.3.2/Parallel.abs:1:0:Warning: no main block found.
+module Parallel;
+^
+./collaboratory/deliverables/D3.3.2/Performance.abs:1:0:Warning: no main block found.
+module Parallel;
+^
+./collaboratory/deliverables/D3.3.2/Timed.abs:1:0:Warning: no main block found.
+module Timed; 
+^
+./collaboratory/deliverables/D3.3.2/VendingMachine.abs:1:0:Warning: no main block found.
+module VendingMachine;
+^
+./collaboratory/deliverables/D3.3.2/VendingMachine_init.abs:1:0:Warning: no main block found.
+module VendingMachine_init;
+^
+./collaboratory/deliverables/D3.3.2/VendingMachine_init_2.abs:1:0:Warning: no main block found.
+module VendingMachine_init;
+^
+./collaboratory/examples/Deadlock/BOL/Test_analyz_Union.abs:22:5:Name false cannot be resolved.
+    if (false){
+-------^
+./collaboratory/examples/Deadlock/BOL/Test_analyz_Union.abs:22:5:Expected type ABS.StdLib.Bool, but found type <UNKNOWN> instead.
+    if (false){
+-------^
+./collaboratory/examples/Deadlock/BOL/Test_Inference_g.abs:0:0:Cannot assign ABS.StdLib.Fut<ABS.StdLib.Fut<A>> to type ABS.StdLib.Fut<A>.
+./collaboratory/examples/MainGeneration/FRH_2Query.abs:1:0:Warning: no main block found.
+module FredhopperCloudServices;
+^
+./collaboratory/examples/MHP/Boolean_awaits/no_deadlock_non_unique_getX.abs:29:1:Variable f is already declared.
+    Fut<C> f = a!getX();
+---^
+Syntactic errors: 5
+./collaboratory/examples/MHP/case_studies/ReplicationSystem.abs:1834:36:no viable alternative at input 'Set<ServerReplicationItem>new'
+        Set<ServerReplicationItem> new localitems = nis.get;
+-----------------------------------^
+./collaboratory/examples/MHP/case_studies/ReplicationSystem.abs:1834:40:mismatched input 'localitems' expecting TYPE_IDENTIFIER
+        Set<ServerReplicationItem> new localitems = nis.get;
+---------------------------------------^
+./collaboratory/examples/MHP/case_studies/ReplicationSystem.abs:1834:51:mismatched input '=' expecting {',', ')', '-', '*', '/', '%', '+', '<=', '>=', '<', '>', '&&', '||', '==', '!='}
+        Set<ServerReplicationItem> new localitems = nis.get;
+--------------------------------------------------^
+./collaboratory/examples/MHP/case_studies/ReplicationSystem.abs:1835:39:mismatched input 'new' expecting ')'
+        filesets = this.registerItems(new localitems);
+--------------------------------------^
+./collaboratory/examples/MHP/case_studies/ReplicationSystem.abs:1835:43:mismatched input 'localitems' expecting TYPE_IDENTIFIER
+        filesets = this.registerItems(new localitems);
+------------------------------------------^
+
+Compilation failed with syntax errors.
+Syntactic errors: 3
+./collaboratory/examples/MHP/case_studies/TradingSystem.abs:30:8:extraneous input 'new' expecting IDENTIFIER
+  Unit new localSaleStarted();
+-------^
+./collaboratory/examples/MHP/case_studies/TradingSystem.abs:204:46:extraneous input 'new' expecting IDENTIFIER
+    if ( ( key == NEW_SALE_KEY ) )cashDeskPC!new localSaleStarted();
+---------------------------------------------^
+./collaboratory/examples/MHP/case_studies/TradingSystem.abs:291:8:extraneous input 'new' expecting IDENTIFIER
+  Unit new localSaleStarted(){
+-------^
+
+Compilation failed with syntax errors.
+./collaboratory/examples/MHP/interprocedural/interproc_0.abs:24:3:Wrong number of arguments. Expected 1, but found 0.
+    x=j!g();
+-----^
+./collaboratory/examples/MHP/interprocedural/interproc_0.abs:35:1:Name y cannot be resolved.
+    y=-1;
+---^
+./collaboratory/examples/MHP/interprocedural/interproc_0.abs:34:0:Method g does not have the same number of parameters as defined in interface B. Expected 1, but found 0.
+Unit g(){
+^
+./collaboratory/examples/MHP/interprocedural/interproc_0.abs:31:22:Method h, declared in interface B is not implemented by class B1.
+class B1() implements B {
+---------------------^
+./collaboratory/examples/MHP/interprocedural/interproc_0.abs:31:22:Method q, declared in interface B is not implemented by class B1.
+class B1() implements B {
+---------------------^
+./collaboratory/examples/MHP/interprocedural/interproc_0.abs:31:22:Method k, declared in interface B is not implemented by class B1.
+class B1() implements B {
+---------------------^
+./collaboratory/examples/MHP/interprocedural/interproc_0.abs:31:22:Method f, declared in interface B is not implemented by class B1.
+class B1() implements B {
+---------------------^
+./collaboratory/examples/MHP/priorities/emmi2.abs:17:2:Method main2 does not have the same number of parameters as defined in interface Emmi2I. Expected 1, but found 0.
+  [priority(0)] Unit main2(){
+-^
+./collaboratory/examples/MHP/priorities/emmi2.abs:53:2:Wrong number of arguments. Expected 1, but found 0.
+  e2!main2();  
+-^
+./collaboratory/examples/MHP/priorities/Prio2.abs:52:4:Wrong number of arguments. Expected 0, but found 1.
+    this ! g(important_value);
+---^
+./collaboratory/examples/MHP/priorities/Prio3.abs:11:2:Method f does not have the same number of parameters as defined in interface A. Expected 0, but found 1.
+  [priority(5)] Unit f(Int i){
+-^
+./collaboratory/examples/MHP/priorities/Prio3.abs:40:2:Wrong number of arguments. Expected 0, but found 1.
+  q ! f(12);
+-^
+Syntactic errors: 7
+./collaboratory/examples/ResourceUsage/ParallelCost/Chat.abs:52:27:extraneous input 'new' expecting IDENTIFIER
+         Fut<Button> f = gui!new localButton("Send");
+-----------------------------^
+./collaboratory/examples/ResourceUsage/ParallelCost/Chat.abs:58:16:extraneous input 'new' expecting IDENTIFIER
+      tf = gui!new localTextField();
+---------------^
+./collaboratory/examples/ResourceUsage/ParallelCost/Chat.abs:157:12:extraneous input 'new' expecting IDENTIFIER
+    Button new localButton(String label);
+-----------^
+./collaboratory/examples/ResourceUsage/ParallelCost/Chat.abs:158:15:extraneous input 'new' expecting IDENTIFIER
+    TextField new localTextField();
+--------------^
+./collaboratory/examples/ResourceUsage/ParallelCost/Chat.abs:163:24:extraneous input 'new' expecting IDENTIFIER
+   Unit setText(String new localText);
+-----------------------^
+./collaboratory/examples/ResourceUsage/ParallelCost/Chat.abs:187:12:no viable alternative at input 'Buttonnew'
+    Button new localButton(String label) {
+-----------^
+./collaboratory/examples/ResourceUsage/ParallelCost/Chat.abs:193:4:extraneous input 'TextField' expecting {<EOF>, 'stateupdate', 'productline', 'extension', 'module', 'root', 'delta', 'product'}
+   TextField new localTextField() {
+---^
+
+Compilation failed with syntax errors.
+./collaboratory/examples/ResourceUsage/ParallelCost/DistHT.abs:1:0:Warning: no main block found.
+module DistHT;
+^
+Syntactic errors: 7
+./collaboratory/examples/ResourceUsage/PeakCost/Chat.abs:63:27:extraneous input 'new' expecting IDENTIFIER
+         Fut<Button> f = gui!new localButton("Send");
+-----------------------------^
+./collaboratory/examples/ResourceUsage/PeakCost/Chat.abs:69:16:extraneous input 'new' expecting IDENTIFIER
+      tf = gui!new localTextField();
+---------------^
+./collaboratory/examples/ResourceUsage/PeakCost/Chat.abs:158:12:extraneous input 'new' expecting IDENTIFIER
+    Button new localButton(String label);
+-----------^
+./collaboratory/examples/ResourceUsage/PeakCost/Chat.abs:159:15:extraneous input 'new' expecting IDENTIFIER
+    TextField new localTextField();
+--------------^
+./collaboratory/examples/ResourceUsage/PeakCost/Chat.abs:164:24:extraneous input 'new' expecting IDENTIFIER
+   Unit setText(String new localText);
+-----------------------^
+./collaboratory/examples/ResourceUsage/PeakCost/Chat.abs:186:12:no viable alternative at input 'Buttonnew'
+    Button new localButton(String label) {
+-----------^
+./collaboratory/examples/ResourceUsage/PeakCost/Chat.abs:191:4:extraneous input 'TextField' expecting {<EOF>, 'stateupdate', 'productline', 'extension', 'module', 'root', 'delta', 'product'}
+   TextField new localTextField() {
+---^
+
+Compilation failed with syntax errors.
+Syntactic errors: 7
+./collaboratory/examples/ResourceUsage/PerformanceIndicators/Chat.abs:52:27:extraneous input 'new' expecting IDENTIFIER
+         Fut<Button> f = gui!new localButton("Send");
+-----------------------------^
+./collaboratory/examples/ResourceUsage/PerformanceIndicators/Chat.abs:58:16:extraneous input 'new' expecting IDENTIFIER
+      tf = gui!new localTextField();
+---------------^
+./collaboratory/examples/ResourceUsage/PerformanceIndicators/Chat.abs:146:12:extraneous input 'new' expecting IDENTIFIER
+    Button new localButton(String label);
+-----------^
+./collaboratory/examples/ResourceUsage/PerformanceIndicators/Chat.abs:147:15:extraneous input 'new' expecting IDENTIFIER
+    TextField new localTextField();
+--------------^
+./collaboratory/examples/ResourceUsage/PerformanceIndicators/Chat.abs:152:24:extraneous input 'new' expecting IDENTIFIER
+   Unit setText(String new localText);
+-----------------------^
+./collaboratory/examples/ResourceUsage/PerformanceIndicators/Chat.abs:174:12:no viable alternative at input 'Buttonnew'
+    Button new localButton(String label) {
+-----------^
+./collaboratory/examples/ResourceUsage/PerformanceIndicators/Chat.abs:179:4:extraneous input 'TextField' expecting {<EOF>, 'stateupdate', 'productline', 'extension', 'module', 'root', 'delta', 'product'}
+   TextField new localTextField() {
+---^
+
+Compilation failed with syntax errors.
+Syntactic errors: 3
+./collaboratory/examples/ResourceUsage/PerformanceIndicators/TradingSystem.abs:174:39:extraneous input 'new' expecting IDENTIFIER
+        if (key == NEW_SALE_KEY) cashDeskPC!new localSaleStarted();
+--------------------------------------------^
+./collaboratory/examples/ResourceUsage/PerformanceIndicators/TradingSystem.abs:520:10:extraneous input 'new' expecting IDENTIFIER
+    Unit new localSaleStarted() {
+---------^
+./collaboratory/examples/ResourceUsage/PerformanceIndicators/TradingSystem.abs:1117:10:extraneous input 'new' expecting IDENTIFIER
+    Unit new localSaleStarted();
+---------^
+
+Compilation failed with syntax errors.
+./collaboratory/examples/ResourceUsage/Traffic/BookShop.abs:5:0:Warning: no main block found.
+module BookShop;
+^
+./collaboratory/examples/ResourceUsage/Traffic/BoundedBuffer.abs:8:0:Warning: no main block found.
+module BoundedBuffer;
+^
+Syntactic errors: 7
+./collaboratory/examples/ResourceUsage/Traffic/Chat.abs:52:27:extraneous input 'new' expecting IDENTIFIER
+         Fut<Button> f = gui!new localButton("Send");
+-----------------------------^
+./collaboratory/examples/ResourceUsage/Traffic/Chat.abs:58:16:extraneous input 'new' expecting IDENTIFIER
+      tf = gui!new localTextField();
+---------------^
+./collaboratory/examples/ResourceUsage/Traffic/Chat.abs:146:12:extraneous input 'new' expecting IDENTIFIER
+    Button new localButton(String label);
+-----------^
+./collaboratory/examples/ResourceUsage/Traffic/Chat.abs:147:15:extraneous input 'new' expecting IDENTIFIER
+    TextField new localTextField();
+--------------^
+./collaboratory/examples/ResourceUsage/Traffic/Chat.abs:152:24:extraneous input 'new' expecting IDENTIFIER
+   Unit setText(String new localText);
+-----------------------^
+./collaboratory/examples/ResourceUsage/Traffic/Chat.abs:174:12:no viable alternative at input 'Buttonnew'
+    Button new localButton(String label) {
+-----------^
+./collaboratory/examples/ResourceUsage/Traffic/Chat.abs:179:4:extraneous input 'TextField' expecting {<EOF>, 'stateupdate', 'productline', 'extension', 'module', 'root', 'delta', 'product'}
+   TextField new localTextField() {
+---^
+
+Compilation failed with syntax errors.
+./collaboratory/examples/ResourceUsage/Traffic/DistHT.abs:1:0:Warning: no main block found.
+module DistHT;
+^
+./collaboratory/examples/ResourceUsage/Traffic/MailServer.abs:1:0:Warning: no main block found.
+module MailServer;
+^
+./collaboratory/examples/ResourceUsage/Traffic/PeerToPeer.abs:3:0:Warning: no main block found.
+module PeerToPeer;
+^
+./collaboratory/examples/SmartDeploy/FRH_staging_re.abs:192:27:Class MainSmartDeployer could not be found.
+    SmartDeployInterface c1 = new MainSmartDeployer(cloudProvider);
+-----------------------------^
+./collaboratory/examples/SmartDeploy/FRH_staging_re.abs:193:1:Method deploy could not be found.
+    c1.deploy();
+---^
+./collaboratory/examples/SmartDeploy/FRH_staging_re.abs:195:42:Method getPlatformService could not be found.
+    List<PlatformService> platformServices = c1.getPlatformService();
+--------------------------------------------^
+./collaboratory/examples/SmartDeploy/FRH_staging_re.abs:196:50:Method getLoadBalancerService could not be found.
+    List<LoadBalancerService> loadBalancerServices = c1.getLoadBalancerService();
+----------------------------------------------------^
+./collaboratory/examples/SmartDeploy/FRH_staging_re.abs:197:43:Method getServiceProvider could not be found.
+    List<ServiceProvider> serviceProviders  = c1.getServiceProvider();
+---------------------------------------------^
+./collaboratory/examples/SmartDeploy/FRH_staging_re.abs:254:29:Class AddQueryDeployer could not be found.
+            SmartDeployInterface c2 = new AddQueryDeployer(cloudProvider,head(platformServices),head(loadBalancerServices),head(serviceProviders));
+-------------------------------------^
+./collaboratory/examples/SmartDeploy/FRH_staging_re.abs:255:3:Method deploy could not be found.
+            c2.deploy();
+-----------^
+./collaboratory/examples/SmartDeploy/FRH_staging_re.abs:260:3:Method undeploy could not be found.
+            c2.undeploy();
+-----------^
+Syntactic errors: 5
+./collaboratory/examples/Termination/ReplicationSystem.abs:1894:36:no viable alternative at input 'Set<ServerReplicationItem>new'
+        Set<ServerReplicationItem> new localitems = nis.get;
+-----------------------------------^
+./collaboratory/examples/Termination/ReplicationSystem.abs:1894:40:mismatched input 'localitems' expecting TYPE_IDENTIFIER
+        Set<ServerReplicationItem> new localitems = nis.get;
+---------------------------------------^
+./collaboratory/examples/Termination/ReplicationSystem.abs:1894:51:mismatched input '=' expecting {',', ')', '-', '*', '/', '%', '+', '<=', '>=', '<', '>', '&&', '||', '==', '!='}
+        Set<ServerReplicationItem> new localitems = nis.get;
+--------------------------------------------------^
+./collaboratory/examples/Termination/ReplicationSystem.abs:1895:39:mismatched input 'new' expecting ')'
+        filesets = this.registerItems(new localitems);
+--------------------------------------^
+./collaboratory/examples/Termination/ReplicationSystem.abs:1895:43:mismatched input 'localitems' expecting TYPE_IDENTIFIER
+        filesets = this.registerItems(new localitems);
+------------------------------------------^
+
+Compilation failed with syntax errors.
+./collaboratory/examples/Termination/Running2.abs:64:21:Wrong number of arguments. Expected 1, but found 0.
+  TaskQueueInter q = new local TaskQueue();
+--------------------^
+./collaboratory/examples/Termination/Running3.abs:64:21:Wrong number of arguments. Expected 1, but found 0.
+  TaskQueueInter q = new local TaskQueue();
+--------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:118:39:Data constructor CPU cannot be resolved.
+        T2_MICRO => map[Pair(Memory,1), Pair(CPU,1)];
+--------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:118:34:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        T2_MICRO => map[Pair(Memory,1), Pair(CPU,1)];
+---------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:118:18:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        T2_MICRO => map[Pair(Memory,1), Pair(CPU,1)];
+-----------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:119:39:Data constructor CPU cannot be resolved.
+        T2_SMALL => map[Pair(Memory,2), Pair(CPU,1)];
+--------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:119:34:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        T2_SMALL => map[Pair(Memory,2), Pair(CPU,1)];
+---------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:119:18:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        T2_SMALL => map[Pair(Memory,2), Pair(CPU,1)];
+-----------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:120:40:Data constructor CPU cannot be resolved.
+        T2_MEDIUM => map[Pair(Memory,4), Pair(CPU,2)];
+---------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:120:35:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        T2_MEDIUM => map[Pair(Memory,4), Pair(CPU,2)];
+----------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:120:19:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        T2_MEDIUM => map[Pair(Memory,4), Pair(CPU,2)];
+------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:121:39:Data constructor CPU cannot be resolved.
+        M4_LARGE => map[Pair(Memory,8), Pair(CPU,2)];
+--------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:121:34:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        M4_LARGE => map[Pair(Memory,8), Pair(CPU,2)];
+---------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:121:18:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        M4_LARGE => map[Pair(Memory,8), Pair(CPU,2)];
+-----------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:122:41:Data constructor CPU cannot be resolved.
+        M4_XLARGE => map[Pair(Memory,16), Pair(CPU,4)];
+----------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:122:36:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        M4_XLARGE => map[Pair(Memory,16), Pair(CPU,4)];
+-----------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:122:19:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        M4_XLARGE => map[Pair(Memory,16), Pair(CPU,4)];
+------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:123:42:Data constructor CPU cannot be resolved.
+        M4_2XLARGE => map[Pair(Memory,32), Pair(CPU,8)];
+-----------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:123:37:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        M4_2XLARGE => map[Pair(Memory,32), Pair(CPU,8)];
+------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:123:20:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        M4_2XLARGE => map[Pair(Memory,32), Pair(CPU,8)];
+-------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:124:44:Data constructor CPU cannot be resolved.
+        M4_10XLARGE => map[Pair(Memory,160), Pair(CPU,40)];
+-------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:124:39:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        M4_10XLARGE => map[Pair(Memory,160), Pair(CPU,40)];
+--------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:124:21:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        M4_10XLARGE => map[Pair(Memory,160), Pair(CPU,40)];
+--------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:125:48:Data constructor CPU cannot be resolved.
+        M3_MEDIUM => map[Pair(Memory,3750/1000), Pair(CPU,1)];
+-----------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:125:43:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        M3_MEDIUM => map[Pair(Memory,3750/1000), Pair(CPU,1)];
+------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:125:19:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Rat>.
+        M3_MEDIUM => map[Pair(Memory,3750/1000), Pair(CPU,1)];
+------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:126:47:Data constructor CPU cannot be resolved.
+        M3_LARGE => map[Pair(Memory,7500/1000), Pair(CPU,2)];
+----------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:126:42:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        M3_LARGE => map[Pair(Memory,7500/1000), Pair(CPU,2)];
+-----------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:126:18:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Rat>.
+        M3_LARGE => map[Pair(Memory,7500/1000), Pair(CPU,2)];
+-----------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:127:41:Data constructor CPU cannot be resolved.
+        M3_XLARGE => map[Pair(Memory,15), Pair(CPU,4)];
+----------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:127:36:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        M3_XLARGE => map[Pair(Memory,15), Pair(CPU,4)];
+-----------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:127:19:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        M3_XLARGE => map[Pair(Memory,15), Pair(CPU,4)];
+------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:128:42:Data constructor CPU cannot be resolved.
+        M3_2XLARGE => map[Pair(Memory,30), Pair(CPU,8)];
+-----------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:128:37:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        M3_2XLARGE => map[Pair(Memory,30), Pair(CPU,8)];
+------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:128:20:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        M3_2XLARGE => map[Pair(Memory,30), Pair(CPU,8)];
+-------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:129:47:Data constructor CPU cannot be resolved.
+        C4_LARGE => map[Pair(Memory,3750/1000), Pair(CPU,2)];
+----------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:129:42:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        C4_LARGE => map[Pair(Memory,3750/1000), Pair(CPU,2)];
+-----------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:129:18:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Rat>.
+        C4_LARGE => map[Pair(Memory,3750/1000), Pair(CPU,2)];
+-----------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:130:48:Data constructor CPU cannot be resolved.
+        C4_XLARGE => map[Pair(Memory,7500/1000), Pair(CPU,4)];
+-----------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:130:43:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        C4_XLARGE => map[Pair(Memory,7500/1000), Pair(CPU,4)];
+------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:130:19:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Rat>.
+        C4_XLARGE => map[Pair(Memory,7500/1000), Pair(CPU,4)];
+------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:131:42:Data constructor CPU cannot be resolved.
+        C4_2XLARGE => map[Pair(Memory,15), Pair(CPU,8)];
+-----------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:131:37:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        C4_2XLARGE => map[Pair(Memory,15), Pair(CPU,8)];
+------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:131:20:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        C4_2XLARGE => map[Pair(Memory,15), Pair(CPU,8)];
+-------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:132:42:Data constructor CPU cannot be resolved.
+        C4_4XLARGE => map[Pair(Memory,30), Pair(CPU,16)];
+-----------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:132:37:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        C4_4XLARGE => map[Pair(Memory,30), Pair(CPU,16)];
+------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:132:20:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        C4_4XLARGE => map[Pair(Memory,30), Pair(CPU,16)];
+-------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:133:42:Data constructor CPU cannot be resolved.
+        C4_8XLARGE => map[Pair(Memory,60), Pair(CPU,36)];
+-----------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:133:37:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+        C4_8XLARGE => map[Pair(Memory,60), Pair(CPU,36)];
+------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:133:20:Type ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Pair<ABS.DC.Resourcetype,ABS.StdLib.Int>.
+        C4_8XLARGE => map[Pair(Memory,60), Pair(CPU,36)];
+-------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:151:28:Data constructor CPU cannot be resolved.
+        Fut<InfRat> cf = dc!total(CPU);
+---------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:151:19:Type <UNKNOWN> does not match declared type ABS.DC.Resourcetype.
+        Fut<InfRat> cf = dc!total(CPU);
+------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:180:59:Data constructor CPU cannot be resolved.
+                dc = new DeploymentComponent(intToString(id), map[Pair(CPU, cpuamount)]);
+----------------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:180:54:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+                dc = new DeploymentComponent(intToString(id), map[Pair(CPU, cpuamount)]);
+-----------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:180:50:Type ABS.StdLib.List<ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int>> does not match declared type ABS.StdLib.List<ABS.StdLib.Pair<Unbound Type,Unbound Type>>.
+                dc = new DeploymentComponent(intToString(id), map[Pair(CPU, cpuamount)]);
+-------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:180:9:Type ABS.StdLib.Map<<UNKNOWN>,ABS.StdLib.Int> does not match declared type ABS.StdLib.Map<ABS.DC.Resourcetype,ABS.StdLib.Rat>.
+                dc = new DeploymentComponent(intToString(id), map[Pair(CPU, cpuamount)]);
+--------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:188:60:Data constructor CPU cannot be resolved.
+                    Fut<Unit> inf = dc!incrementResources(cpuamount - cpu, CPU); inf.get;
+--------------------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:188:21:Type <UNKNOWN> does not match declared type ABS.DC.Resourcetype.
+                    Fut<Unit> inf = dc!incrementResources(cpuamount - cpu, CPU); inf.get;
+-----------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:295:29:Data constructor CPU cannot be resolved.
+        Fut<InfRat> fdt = dc!total(CPU);
+----------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:295:20:Type <UNKNOWN> does not match declared type ABS.DC.Resourcetype.
+        Fut<InfRat> fdt = dc!total(CPU);
+-------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1250:55:Data constructor CPU cannot be resolved.
+                Triple<Id, Resourcetype, Rat> h = Triple(fst(lat), CPU, snd(lat));
+------------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1250:38:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+                Triple<Id, Resourcetype, Rat> h = Triple(fst(lat), CPU, snd(lat));
+-------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1389:29:Data constructor CPU cannot be resolved.
+        Fut<InfRat> fdt = dc!total(CPU);
+----------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1389:20:Type <UNKNOWN> does not match declared type ABS.DC.Resourcetype.
+        Fut<InfRat> fdt = dc!total(CPU);
+-------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1430:68:Data constructor CPU cannot be resolved.
+    CustomerConfig c1 = Pair("c1", list[Pair(Config(FAS, list[map[Pair(CPU,5)]]), 1)]);
+----------------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1430:63:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+    CustomerConfig c1 = Pair("c1", list[Pair(Config(FAS, list[map[Pair(CPU,5)]]), 1)]);
+-----------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1430:59:Type ABS.StdLib.List<ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int>> does not match declared type ABS.StdLib.List<ABS.StdLib.Pair<Unbound Type,Unbound Type>>.
+    CustomerConfig c1 = Pair("c1", list[Pair(Config(FAS, list[map[Pair(CPU,5)]]), 1)]);
+-------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1433:72:Data constructor CPU cannot be resolved.
+    CustomerConfig c2 = Pair("c2", list[Pair(Config(SUGGEST, list[map[Pair(CPU,1)]]), 1)]);
+--------------------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1433:67:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+    CustomerConfig c2 = Pair("c2", list[Pair(Config(SUGGEST, list[map[Pair(CPU,1)]]), 1)]);
+---------------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1433:63:Type ABS.StdLib.List<ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int>> does not match declared type ABS.StdLib.List<ABS.StdLib.Pair<Unbound Type,Unbound Type>>.
+    CustomerConfig c2 = Pair("c2", list[Pair(Config(SUGGEST, list[map[Pair(CPU,1)]]), 1)]);
+-----------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1436:68:Data constructor CPU cannot be resolved.
+    CustomerConfig c3 = Pair("c3", list[Pair(Config(FAS, list[map[Pair(CPU,4)]]), 1)]);
+----------------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1436:63:Type <UNKNOWN> does not match declared type <UNKNOWN>.
+    CustomerConfig c3 = Pair("c3", list[Pair(Config(FAS, list[map[Pair(CPU,4)]]), 1)]);
+-----------------------------------------------------------------^
+./collaboratory/review_2nd_year/erlbackend/FredhopperCloudServices_NoDeltas_v2.abs:1436:59:Type ABS.StdLib.List<ABS.StdLib.Pair<<UNKNOWN>,ABS.StdLib.Int>> does not match declared type ABS.StdLib.List<ABS.StdLib.Pair<Unbound Type,Unbound Type>>.
+    CustomerConfig c3 = Pair("c3", list[Pair(Config(FAS, list[map[Pair(CPU,4)]]), 1)]);
+-------------------------------------------------------------^
+./collaboratory/review_2nd_year/saco/Noncumulative.abs:1:0:Warning: no main block found.
+module FMNoncu; 
+^
+./collaboratory/review_2nd_year/saco/Parallel.abs:1:0:Warning: no main block found.
+module Parallel;
+^
+./collaboratory/review_2nd_year/saco/Performance.abs:1:0:Warning: no main block found.
+module DemoTraffic;
+^
