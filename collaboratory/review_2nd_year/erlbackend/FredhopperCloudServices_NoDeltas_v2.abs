@@ -115,22 +115,22 @@ type ResourceCapacities = Map<Resourcetype, Rat>;
 //Given a VM type, return the capacity of each resource type in that VM
 def ResourceCapacities vmResources(VMType v) = 
 	case v {
-		T2_MICRO => map[Pair(Memory,1), Pair(CPU,1)];
-		T2_SMALL => map[Pair(Memory,2), Pair(CPU,1)];
-		T2_MEDIUM => map[Pair(Memory,4), Pair(CPU,2)];
-		M4_LARGE => map[Pair(Memory,8), Pair(CPU,2)];
-		M4_XLARGE => map[Pair(Memory,16), Pair(CPU,4)];
-		M4_2XLARGE => map[Pair(Memory,32), Pair(CPU,8)];
-		M4_10XLARGE => map[Pair(Memory,160), Pair(CPU,40)];
-		M3_MEDIUM => map[Pair(Memory,3750/1000), Pair(CPU,1)];
-		M3_LARGE => map[Pair(Memory,7500/1000), Pair(CPU,2)];
-		M3_XLARGE => map[Pair(Memory,15), Pair(CPU,4)];
-		M3_2XLARGE => map[Pair(Memory,30), Pair(CPU,8)];
-		C4_LARGE => map[Pair(Memory,3750/1000), Pair(CPU,2)];
-		C4_XLARGE => map[Pair(Memory,7500/1000), Pair(CPU,4)];
-		C4_2XLARGE => map[Pair(Memory,15), Pair(CPU,8)];
-		C4_4XLARGE => map[Pair(Memory,30), Pair(CPU,16)];
-		C4_8XLARGE => map[Pair(Memory,60), Pair(CPU,36)];
+		T2_MICRO => map[Pair(Memory,1), Pair(Speed,1)];
+		T2_SMALL => map[Pair(Memory,2), Pair(Speed,1)];
+		T2_MEDIUM => map[Pair(Memory,4), Pair(Speed,2)];
+		M4_LARGE => map[Pair(Memory,8), Pair(Speed,2)];
+		M4_XLARGE => map[Pair(Memory,16), Pair(Speed,4)];
+		M4_2XLARGE => map[Pair(Memory,32), Pair(Speed,8)];
+		M4_10XLARGE => map[Pair(Memory,160), Pair(Speed,40)];
+		M3_MEDIUM => map[Pair(Memory,3750/1000), Pair(Speed,1)];
+		M3_LARGE => map[Pair(Memory,7500/1000), Pair(Speed,2)];
+		M3_XLARGE => map[Pair(Memory,15), Pair(Speed,4)];
+		M3_2XLARGE => map[Pair(Memory,30), Pair(Speed,8)];
+		C4_LARGE => map[Pair(Memory,3750/1000), Pair(Speed,2)];
+		C4_XLARGE => map[Pair(Memory,7500/1000), Pair(Speed,4)];
+		C4_2XLARGE => map[Pair(Memory,15), Pair(Speed,8)];
+		C4_4XLARGE => map[Pair(Memory,30), Pair(Speed,16)];
+		C4_8XLARGE => map[Pair(Memory,60), Pair(Speed,36)];
 	};
 
 
@@ -148,7 +148,7 @@ class InfrastructureServiceImpl implements InfrastructureService {
 	Map<Id, DC> inUse = EmptyMap;
 	
 	Int cpu(DC dc) {
-		Fut<InfRat> cf = dc!total(CPU);
+		Fut<InfRat> cf = dc!total(Speed);
 		InfRat cpu = cf.get;
 		return truncate(finvalue(cpu));
 	}
@@ -177,7 +177,7 @@ class InfrastructureServiceImpl implements InfrastructureService {
 		DC dc = null;
 		case md {
 			Nothing => {
-				dc = new DeploymentComponent(intToString(id), map[Pair(CPU, cpuamount)]);
+				dc = new DeploymentComponent(intToString(id), map[Pair(Speed, cpuamount)]);
 				total = total + cpuamount;
 				inUse = InsertAssoc(Pair(id, dc), inUse);
 			}
@@ -185,7 +185,7 @@ class InfrastructureServiceImpl implements InfrastructureService {
 				dc = d;
 				Int cpu = this.cpu(dc);
 				if (cpu < cpuamount) {
-					Fut<Unit> inf = dc!incrementResources(cpuamount - cpu, CPU); inf.get;
+					Fut<Unit> inf = dc!incrementResources(cpuamount - cpu, Speed); inf.get;
 					total = total + (cpuamount - cpu);
 				}
 			}
@@ -292,7 +292,7 @@ class ServiceImpl(Id serviceId, ServiceType st, Customer c, Int cost) implements
 	
 	Int getCPU() {
 		DeploymentComponent dc = thisDC();
-		Fut<InfRat> fdt = dc!total(CPU);
+		Fut<InfRat> fdt = dc!total(Speed);
 		InfRat dt = fdt.get;
 		return truncate(finvalue(dt));
 	}
@@ -346,6 +346,8 @@ class ServiceImpl(Id serviceId, ServiceType st, Customer c, Int cost) implements
 		assert state == RUNNING;
 		Int cost = this.cost(request);
 		Int time = currentms();
+                cost = random(cost) + 1;
+                println(toString(now()) + ": invoking " + toString(request) + " with cost " + toString(cost));
 		[Cost: cost] log = log + 1;
 		time = currentms() - time;
 		latency = max(latency, time); 
@@ -1024,7 +1026,6 @@ class RepeatUserImpl implements User {
 	Unit use(EndPoint endPoint, Int min, Int max) {
 		Int count = 0;
 		while (True) {
-		        println("Use: log = " + toString(log));
 			State state = this.getState(endPoint);
 			if (state == RUNNING) {
 				log = log + 1;
@@ -1247,7 +1248,7 @@ class LatencyMonitor(Int upper, MonitorPlatformService ps) implements Monitor {
 			while(setting != Nil) {
 				Pair<Id, Int> lat = head(setting);
 				setting = tail(setting);
-				Triple<Id, Resourcetype, Rat> h = Triple(fst(lat), CPU, snd(lat));
+				Triple<Id, Resourcetype, Rat> h = Triple(fst(lat), Speed, snd(lat));
 				scaling = Cons(h, scaling);
 			}
 			endPoints = tail(endPoints);
@@ -1386,7 +1387,7 @@ class QueryServiceImpl(DeploymentService ds, Customer c) implements IQueryServic
 	}
 	Int getCPU() {
 		DeploymentComponent dc = thisDC();
-		Fut<InfRat> fdt = dc!total(CPU);
+		Fut<InfRat> fdt = dc!total(Speed);
 		InfRat dt = fdt.get;
 		return truncate(finvalue(dt));
 	}
@@ -1427,13 +1428,13 @@ type CustomerConfig = Pair<Customer, List<Pair<Config, Int>>>;
 class ExampleSetup implements Main {
 
 	// Customer c1 requires a single service instance with 5 CPU resources 
-	CustomerConfig c1 = Pair("c1", list[Pair(Config(FAS, list[map[Pair(CPU,5)]]), 1)]);
+	CustomerConfig c1 = Pair("c1", list[Pair(Config(FAS, list[map[Pair(Speed,5)]]), 1)]);
 	
 	// Customer c2 requires a single service instance with 1 CPU resources
-	CustomerConfig c2 = Pair("c2", list[Pair(Config(SUGGEST, list[map[Pair(CPU,1)]]), 1)]);
+	CustomerConfig c2 = Pair("c2", list[Pair(Config(SUGGEST, list[map[Pair(Speed,1)]]), 1)]);
 	
 	// Customer c3 requires a single service instance with 4 CPU resources
-	CustomerConfig c3 = Pair("c3", list[Pair(Config(FAS, list[map[Pair(CPU,4)]]), 1)]);
+	CustomerConfig c3 = Pair("c3", list[Pair(Config(FAS, list[map[Pair(Speed,4)]]), 1)]);
 
 	//scale on the number of customers...
 	//scale on the number of service instances...

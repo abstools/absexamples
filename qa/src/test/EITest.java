@@ -37,7 +37,7 @@ public class EITest extends FrontendTest {
 , { "../collaboratory/deliverables/D3.3.2/VendingMachine_init.abs", null }
 , { "../collaboratory/deliverables/D3.3.2/VendingMachine_init_2.abs", null }
 , { "../collaboratory/examples/Deadlock/BOL/Test_analyz_Union.abs", null }
-, { "../collaboratory/examples/Deadlock/BOL/Test_Inference_9.abs", null }
+ , { "../collaboratory/examples/Deadlock/BOL/Test_Inference_9.abs", null }
 , { "../collaboratory/examples/Deadlock/BOL/Test_Inference_b.abs", null }
 , { "../collaboratory/examples/Deadlock/BOL/Test_Inference_b1.abs", null }
 , { "../collaboratory/examples/Deadlock/BOL/Test_Inference_b2.abs", null }
@@ -93,7 +93,6 @@ public class EITest extends FrontendTest {
 , { "../collaboratory/examples/MHP/Boolean_awaits/no_deadlock_with_nested_loop_if.abs", null }
 , { "../collaboratory/examples/MHP/case_studies/ReplicationSystem.abs", null }
 , { "../collaboratory/examples/MHP/case_studies/TradingSystem.abs", null }
-, { "../collaboratory/examples/MHP/interprocedural/interproc_0.abs", null }
 , { "../collaboratory/examples/MHP/interprocedural/interproc_1.abs", null }
 , { "../collaboratory/examples/MHP/interprocedural/interproc_2.abs", null }
 , { "../collaboratory/examples/MHP/interprocedural/interproc_3.abs", null }
