@@ -1,4 +1,4 @@
-module module Test_Inference_first_new_deadlock;
+module Test_Inference_first_new_deadlock;
 
 
 interface A {
