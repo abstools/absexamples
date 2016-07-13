@@ -178,6 +178,6 @@ public class EITest extends FrontendTest {
     }
 
     protected Model parse(String input) throws Exception {
-        return assertParseFileOk(input, true);
+        return assertTypeCheckFileOk(input, true);
     }
 }
