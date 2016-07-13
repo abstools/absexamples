@@ -1,0 +1,69 @@
+module PPDP16;
+import * from ABS.StdLib;
+
+type Data = Int;
+data FooExc = Ok | Exception;
+
+interface FooInt {
+    Int abs(Int x);
+    Int exp(Int a,Int n);
+}
+
+interface POR1Int{
+    Unit t1();
+    Unit t2();
+}
+
+interface POR2Int{
+    Unit t3();
+}
+
+
+class Foo() implements FooInt {
+    FooExc exc = Ok;
+
+    Int abs(Int x){
+        Int r = 0;
+        if (x < 0) r = -x;
+        else r = x;
+        return r;
+    }
+
+    Int exp(Int a,Int n){
+	Int r = 1;
+        if (n < 0) this.exc = Exception;
+        else {
+            while (n > 0){
+                r = r*a;
+                n = n-1;
+            }
+        }
+        return r;
+    }
+}
+
+
+class POR1() implements POR1Int{
+    Int f = 0;
+
+    Unit t1(){
+	this.f = 5;
+    }
+
+    Unit t2(){
+	this.f = 7;
+    }
+}
+
+class POR2(POR1Int o) implements POR2Int{
+    Unit t3(){
+	o!t2();
+    }
+}
+
+{
+    POR1Int o1 = new POR1();
+    POR2Int o2 = new POR2(o1);
+    o1!t1();
+    o2!t3();
+}
