@@ -40,5 +40,5 @@ class C implements C {
 C i = new C();
 C j = new C();
 C k = new C();
-Fut<C> fut4 = i!q(j,k);
+Fut<Fut<C>> fut4 = i!q(j,k);
 }
