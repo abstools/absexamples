@@ -1,0 +1,25 @@
+
+module Factorial ;
+interface Math { Int fact_g(Int n);
+	}
+class Math implements Math {
+
+// fact_g deadlocks with input >= 1
+
+	Int fact_g(Int n){
+		Fut<Int> x ;
+		Int m = 0;
+		if (n==0) { m = 1; }
+		else { x = this!fact_g(n-1); m = x.get; m = n*m; }
+		return m ;
+	   }
+
+	
+}
+
+{ Math x = new Math(); Fut<Int> fut = x!fact_g(7); fut.get ;
+}
+
+
+
+

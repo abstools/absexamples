@@ -1,0 +1,40 @@
+
+
+module uglyChain;
+
+interface Object {
+}
+
+class Object implements Object {
+}
+
+interface C {
+   Unit m(C c);
+   Unit n(C a) ;
+   Unit q() ;
+}
+
+class C implements C {
+	Unit m(C c){
+		C w = new C() ;
+                w!m(this) ;
+		c!n(this) ; 
+        }
+	Unit n(C a){  	
+		Fut<Unit> x = a!q() ;
+                x.get ;
+        }
+	Unit q(){
+        }
+
+}
+
+
+{
+        C a = new C() ;
+	C b = new C() ;
+        Fut<Unit> x = a!m(b) ;
+}
+
+
+

@@ -1,0 +1,92 @@
+
+module PhilosophersN;
+
+import * from ABS.StdLib;
+import * from ABS.Meta;
+
+def Int toNum (String numLit) =
+case numLit{
+"1" => 1;"2" => 2;"3" => 3;"4" => 4;"5" => 5;"6" => 6;"7" => 7;"8" => 8;"9" => 9; "0" => 0;
+};
+
+def Int parseInt(String text, Int x) =
+let (Int firstNum) = toNum(substr(text, 0, 1)) in
+let (Int l) = strlen(text) in
+case l{
+1 => 10*x + firstNum;
+_ =>  parseInt(substr(text, 1, l-1), firstNum  + 10*x);
+};
+
+interface Philosopher {
+Unit behave() ;
+}
+
+interface Fork {
+    Unit grab(Fork z, Int name) ;
+    Unit grab_second(Int name) ;
+}
+
+interface Network {
+    Unit create_network(Fork fL, Fork fR, Int n) ;
+}
+
+class Philosopher(Fork fork1, Fork fork2, Int n) implements Philosopher {
+
+    Unit behave() {
+Fut<Unit> fut;
+fut = fork1!grab(fork2,n) ;
+fut.get ;
+Unit u = println(intToString(n) + " releases forks and is thinking") ;
+Fut<Unit> c = this!behave() ;
+    }
+}
+
+class Fork implements Fork {
+
+    Unit grab(Fork z, Int n) {
+Unit u = println(intToString(n) + " grabs first fork") ;
+        Fut<Unit> f = z!grab_second(n) ;
+f.get ;
+    }
+
+    Unit grab_second(Int n) {
+        Unit u = println(intToString(n) + " grabs second fork") ;
+  Unit v = println(intToString(n) + " is eating") ;
+    }
+}
+
+class Network implements Network {
+    Unit create_network(Fork fL, Fork fR, Int n){
+    if (n==0) {
+    Philosopher p = new Philosopher(fL,fR,0) ;
+    Fut<Unit> fut = p!behave() ;
+    fut.get ;
+    } else {
+    Fork fLL = new Fork() ;
+    Philosopher p = new Philosopher(fL,fLL,n) ;
+    Fut<Unit> futp = p!behave() ;
+    futp.get ;
+    Network nwk = new Network() ;
+	Fut<Unit> futn = nwk!create_network(fLL, fR, n-1) ;
+    futn.get ;
+    }
+    }
+}
+
+// MAIN //
+
+
+{ String s = readln() ;
+Int n = parseInt(s,0) ;
+Fork fL = new Fork() ;
+Fork fR = new Fork() ;
+Philosopher p = new Philosopher(fR, fL,n) ;  //WITHOUT DEADLOCK
+//Philosopher p = new Philosopher(fL, fR ,n) ;  //WITH DEADLOCK
+Fut<Unit> futu = p!behave() ;
+//futu.get ;    //questo no lo possiamo fare
+Network nwk = new Network() ;
+Fut<Unit> fut = nwk!create_network(fR, fL, n-1) ;
+    fut.get ;
+}
+
+

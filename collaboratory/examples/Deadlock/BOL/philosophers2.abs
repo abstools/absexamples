@@ -1,0 +1,60 @@
+
+module Philosophers2;
+
+import * from ABS.StdLib;
+import * from ABS.Meta;
+
+interface Philosopher {
+Unit behave() ;
+}
+
+interface Fork {
+    Unit grab(Fork z, Int name) ;
+    Unit grab_second(Int name) ;
+}
+
+
+
+class Philosopher(Fork fork1, Fork fork2, Int n) implements Philosopher {
+
+    Unit behave() {
+Fut<Unit> fut;
+fut = fork1!grab(fork2,n) ;
+fut.get ;
+Unit u = println(intToString(n) + " releases forks and is thinking") ;
+Fut<Unit> c = this!behave() ;
+    }
+}
+
+class Fork implements Fork {
+
+    Unit grab(Fork z, Int n) {
+Unit u = println(intToString(n) + " grabs first fork") ;
+        Fut<Unit> f = z!grab_second(n) ;
+f.get ;
+    }
+
+    Unit grab_second(Int n) {
+        Unit u = println(intToString(n) + " grabs second fork") ;
+  Unit v = println(intToString(n) + " is eating") ;
+    }
+}
+
+
+
+// MAIN //
+
+
+{
+Fork fL = new Fork() ;
+Fork fR = new Fork() ;
+Philosopher p = new Philosopher(fR, fL,1) ;  //WITH DEADLOCK
+//Philosopher p = new Philosopher(fL, fR ,1) ;  //WITHOUT DEADLOCK
+Fut<Unit> fut1 = p!behave() ;
+Philosopher p2 = new Philosopher(fL,fR,2) ;
+Fut<Unit> fut2 = p2!behave() ;
+fut1.get ;
+fut2.get ;
+}
+
+
