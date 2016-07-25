@@ -87,9 +87,8 @@ class MapReduce(Int maxMachines) implements MapReduce {
         Worker w;
         Fut<Worker> fw;
         Fut<List<Pair<Key,Value>>> fMap;
-	Pair<Key,Value> keyValuePair = Pair(0,0);
+        Pair<Key,Value> keyValuePair = Pair(0,0);
         List<Key> keys = Nil;
-        Fut<Values> fReduce;
 	
 	// MAP: Input = [(1,[7,9,7]),(2,[9,12,12]),(3,[7,12,7])]
         while (~isEmpty(input)) {
@@ -97,7 +96,7 @@ class MapReduce(Int maxMachines) implements MapReduce {
             key = fst(item);
             values = snd(item);
             input = tail(input);
-	    fw = this ! getWorker();
+            fw = this ! getWorker();
             await fw?; 
             w = fw.get;
             fMap = w ! invokeMap(key,values); // key=1, values=[7,9,7] => [(7,1),(9,1),(7,1)]
@@ -132,7 +131,7 @@ class MapReduce(Int maxMachines) implements MapReduce {
             fw = this ! getWorker();
             await fw?; 
             w = fw.get;
-            fReduce = w ! invokeReduce(key, values);
+            Fut<Values> fReduce = w ! invokeReduce(key, values);
             fReduceResults = appendright(fReduceResults,Pair(key,fReduce));
         }
         // returns [(7,[1,3]),(9,[1,2]),(12,[2,3])]
@@ -146,7 +145,7 @@ class MapReduce(Int maxMachines) implements MapReduce {
             values = fValues.get;
             result = appendright(result,Pair(key, values));
         }
-	output = result;
+        output = result;
         return result;   
     } 
              
