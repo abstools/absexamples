@@ -31,8 +31,8 @@ class Y implements IY {
 class IMain {
 	Unit main () {
 
-		IX x = new local X ();
-		IY y = new local Y ();
+		IX x = new  X ();
+		IY y = new  Y ();
 
 		x!p(y);
 		skip;
