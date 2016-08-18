@@ -17,6 +17,10 @@ case l{
 _ =>  parseInt(substr(text, 1, l-1), firstNum  + 10*x);
 };
 
+interface IProgram {
+	Unit runProgram();
+}
+
 interface Philosopher {
 Unit behave() ;
 }
@@ -73,20 +77,30 @@ class Network implements Network {
     }
 }
 
+
+class Program implements IProgram{
+	Unit runProgram(){
+		String s = readln() ;
+		Int n = parseInt(s,0) ;
+		Fork fL = new Fork() ;
+		Fork fR = new Fork() ;
+		//Philosopher p = new Philosopher(fR, fL,n) ;  //WITHOUT DEADLOCK
+		Philosopher p = new Philosopher(fL, fR ,n) ;  //WITH DEADLOCK
+		Fut<Unit> futu = p!behave() ;
+		//futu.get ;    //questo no lo possiamo fare
+		Network nwk = new Network() ;
+		Fut<Unit> fut = nwk!create_network(fR, fL, n-1) ;
+		fut.get ;
+	}
+}
+
 // MAIN //
 
 
-{ String s = readln() ;
-Int n = parseInt(s,0) ;
-Fork fL = new Fork() ;
-Fork fR = new Fork() ;
-Philosopher p = new Philosopher(fR, fL,n) ;  //WITHOUT DEADLOCK
-//Philosopher p = new Philosopher(fL, fR ,n) ;  //WITH DEADLOCK
-Fut<Unit> futu = p!behave() ;
-//futu.get ;    //questo no lo possiamo fare
-Network nwk = new Network() ;
-Fut<Unit> fut = nwk!create_network(fR, fL, n-1) ;
-    fut.get ;
+{ 
+	IProgram p = new Program();
+	p.runProgram();
+
 }
 
 
