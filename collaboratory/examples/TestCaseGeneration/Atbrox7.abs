@@ -1,0 +1,779 @@
+
+/*
+Changes:
+
+- Simplified main
+
+- fMapResults and fReduceResults are lists instead of sets due to the
+  problem of future vars inside data-structures. We therefore use
+  isEmpty, appendright, head and tail instead of emptySet,
+  insertElement, take and remove resp.
+
+*/
+
+module Atbrox;
+//import * from ABS.StdLib;
+//import * from ABS.DC;
+
+// Mirar los comentarios OJO!!!!
+
+type URI = String;
+type Word = String;
+
+
+data InfRat = InfRat | Fin(Rat finvalue);
+
+data Resourcetype = CPU | Bandwidth | Memory
+                  | Startupduration | PaymentInterval | CostPerInterval;
+
+type InvertedIndex = Map<Word, List<URI>>;
+
+type Document = List<Word>;
+
+data CrawledData = CrawledData(List<Pair<URI, List<Word>>> crawled_documents);
+
+data IndexDataBundle = IndexDataBundle(
+    List<Pair<URI, Document>> documents, InvertedIndex inverted_index);
+
+def DeploymentComponent thisDC() = builtin;
+
+
+/**
+ * Returns the difference of sets 'set1' and 'set2', i.e., all
+ * elements of 'set1' that are not in 'set2'.
+ */
+def Set<A> difference<A>(Set<A> set1, Set<A> set2) =
+   case set1 {
+      EmptySet => EmptySet;
+      Insert(e1, ss1) =>  case set2 {
+          EmptySet => set1;
+          Insert(e1, ss2) => difference(ss1, ss2);
+          Insert(e2, ss2) =>
+            if (e1 != e2)
+            then Insert(e1, difference(ss1, set2))
+            else difference(set1, ss2);
+      };
+   };
+
+interface CloudProvider {
+    // (pre)launchInstance might have a delay, the others are instantaneous.
+    // launchInstance might hand out an already-running instance if it has
+    // been released; in this case there will be no delay.
+    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d);
+    DeploymentComponent launchInstance(Map<Resourcetype, Rat> description);
+    // acquireInstance, releaseInstance are called from deployment components.
+    // launchInstance does the equivalent of acquireInstance.
+    Bool acquireInstance(DeploymentComponent instance);
+    Bool releaseInstance(DeploymentComponent instance);
+    Bool killInstance(DeploymentComponent instance);
+
+    [Atomic] Rat getAccumulatedCost();
+    [Atomic] Unit shutdown();
+}
+
+class CloudProvider(String name) implements CloudProvider {
+    // Preliminary version - mind the FIXMEs!
+
+    // All launched instances
+    Set<DeploymentComponent> launchedInstances = set[];
+    // Launched instances that are currently acquired
+    Set<DeploymentComponent> acquiredInstances = set[];
+    Set<DeploymentComponent> killedInstances = set[];
+    Int instanceCounter = 0;
+    Rat accumulatedCost = 0;
+    Bool keeprunning = True;
+
+    Unit run() {
+        while(keeprunning) {
+           // OJO!!!! comentado 
+           //await duration(1, 1);
+            Rat cost = this.sumOfCosts(launchedInstances);
+            accumulatedCost = accumulatedCost + cost;
+        }
+    }
+    [Atomic] Unit shutdown() { keeprunning = False; }
+
+    Rat sumOfCosts(Set<DeploymentComponent> dcs) {
+        Rat result = 0;
+        Time t = now();
+        while (emptySet(dcs)==False) {
+            DeploymentComponent dc = take(dcs);
+            dcs = remove(dcs, dc);
+            Rat cost = await dc!getCostPerInterval();
+            if (cost > 0) {
+                Time creationtime = await dc!getCreationTime();
+                Rat time_elapse = timeDifference(t, creationtime);
+                Int interval = await dc!getPaymentInterval();
+                if (time_elapse % interval == 0) {
+                    result = result + cost;
+                }
+            }
+        }
+        return result;
+    }
+
+    DeploymentComponent prelaunchInstance(Map<Resourcetype, Rat> d) {
+       
+        DeploymentComponent result = this.findMatchingInstance(killedInstances, d);
+        if (result != null) {
+            killedInstances = remove(killedInstances, result);
+            launchedInstances = insertElement(launchedInstances, result);
+        } else {
+            result = new DeploymentComponent(name + "-"
+                + toString(instanceCounter), d);
+            instanceCounter = instanceCounter + 1;
+            Rat startup_duration = await result!getStartupDuration();
+            // OJO!!! Comentado este await.
+            //  await duration(startup_duration, startup_duration);
+            launchedInstances = insertElement(launchedInstances, result);
+            result!setProvider(this);
+        }
+        return result;
+    }
+
+    DeploymentComponent launchInstance(Map<Resourcetype, Rat> d) {
+        DeploymentComponent result = this.prelaunchInstance(d);
+        acquiredInstances = insertElement(acquiredInstances, result);
+        return result;
+    }
+
+    Bool acquireInstance(DeploymentComponent instance) {
+        Bool result = True;
+        if (contains(acquiredInstances, instance)) {
+            result = False;
+        } else {
+            acquiredInstances = insertElement(acquiredInstances, instance);
+        }
+        return result;
+    }
+    Bool releaseInstance(DeploymentComponent instance) {
+        // FIXME: Currently we do not protect against double-release and always
+        // return True.  Once we have means of testing whether there is still
+        // activity on a deployment component, we could refuse to release it in
+        // that case and return False.
+        if (contains(acquiredInstances, instance)) {
+            acquiredInstances = remove(acquiredInstances, instance);
+        }
+        return True;
+    }
+
+    Bool killInstance(DeploymentComponent instance) {
+        // Refuse to kill an acquired instance.
+        // FIXME: is this the right thing?
+        Bool result = (contains(acquiredInstances, instance)==False);
+        if (result) {
+            launchedInstances = remove(launchedInstances, instance);
+            killedInstances = insertElement(killedInstances, instance);
+        }
+        return result;
+    }
+
+    [Atomic] Rat getAccumulatedCost() {
+        return accumulatedCost;
+    }
+
+    DeploymentComponent findMatchingInstance(Set<DeploymentComponent> instances,
+        Map<Resourcetype, Rat> description)
+        {
+            DeploymentComponent result = null;
+            while (emptySet(instances)==False && result == null) {
+                DeploymentComponent instance = take(instances);
+                instances = remove(instances, instance);
+                Bool matches = await instance!matchesDescription(description);
+                if (matches) {
+                    result = instance;
+                }
+            }
+            return result;
+        }
+    }
+
+
+
+
+
+interface DeploymentComponent {
+    //***** [Atomic] Rat load(Resourcetype rtype, Int periods);
+    //[Atomic] InfRat total(Resourcetype rtype);
+    // Utility method, implemented in terms of 'decrementResources' /
+    // 'incrementResources'.
+    //****** Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype);
+    // Decrement available resourcetype by given amount from the next
+    // time interval onwards.
+    //****** Unit decrementResources(Rat amount, Resourcetype rtype);
+    // Increment available resourcetype by given amount from the next
+    // time interval onwards.
+    //***** Unit incrementResources(Rat amount, Resourcetype rtype);
+
+    [Atomic] Unit setProvider(CloudProvider provider);
+    [Atomic] CloudProvider getProvider();
+    [Atomic] Time getCreationTime();
+    [Atomic] Rat getStartupDuration();
+    [Atomic] Int getPaymentInterval();
+    [Atomic] Rat getCostPerInterval();
+    // Convenience methods for calling CloudProvider acquireInstance,
+    // releaseInstance.  If no cloud provider is set, return True.
+    Bool acquire();
+    Bool release();
+    // Return True if we match needed resources according to description.  For
+    // different resource types this might mean different things (e.g.,
+    // available not total memory must match vs. total CPU speed must match).
+    [Atomic] Bool matchesDescription(Map<Resourcetype, Rat> description);
+}
+
+
+class DeploymentComponent (String description, Map<Resourcetype, Rat> initconfig)
+implements DeploymentComponent {
+    // This class has fields that reflect execution state and resource
+    // consumption; they are changed by the underlying runtime system.
+    Time creationTime = now();
+    // Histories are updated by the backend.  totalhistories stay empty in
+    // case the DC has an infinite amount of resources for that type.
+    List<Rat> cpuhistory = Nil;
+    List<Rat> cpuhistorytotal = Nil;
+    List<Rat> bwhistory = Nil;
+    List<Rat> bwhistorytotal = Nil;
+    List<Rat> memoryhistory = Nil;
+    List<Rat> memoryhistorytotal = Nil;
+    // Counters of consumed resources in current time unit.  Modified by the
+    // backend where appropriate (CPU, bandwidth self-refresh; memory doesn't.)
+    Rat cpuconsumed = 0;
+    Rat bwconsumed = 0;
+    Rat memoryconsumed = 0;
+    // Initialized flag read by the backend to avoid premature execution
+    Bool initialized = False;
+    // Total amount of resources in current and next time interval.
+    InfRat cpu = case lookup(initconfig, CPU) {
+      Nothing => InfRat; Just(v) => Fin(v); };
+    InfRat cpunext = cpu;
+    InfRat bw = case lookup(initconfig, Bandwidth) {
+      Nothing => InfRat; Just(v) => Fin(v); };
+    InfRat bwnext = bw;
+    InfRat memory = case lookup(initconfig, Memory) {
+      Nothing => InfRat; Just(m) => Fin(m); };
+    InfRat memorynext = memory;
+    Int paymentInterval = 
+        case lookup(initconfig, PaymentInterval) {
+            Nothing => 1; Just(n) => truncate(n); };
+    Rat costPerInterval = case lookup(initconfig, CostPerInterval) {
+        Nothing => 0; Just(o) => o; };
+    Rat startupDuration = case lookup(initconfig, Startupduration) {
+        Nothing => 0; Just(p) => p; };
+
+    CloudProvider cloudprovider = null;
+    {
+        this.initialized = True;
+    }
+
+    /*****
+    [Atomic] Rat load(Resourcetype rtype, Int periods) {
+        Rat result = 0;
+        case (rtype) {
+            CPU => {
+                if (cpu != InfRat) {
+                    result = averageDivsN(cpuhistory, cpuhistorytotal, periods);
+                }
+            }
+            Bandwidth => {
+                if (bw != InfRat) {
+                    result = averageDivsN(bwhistory, bwhistorytotal, periods);
+                }
+            }
+            Memory => {
+                if (memory != InfRat) {
+                    result = averageDivsN(memoryhistory, memoryhistorytotal, periods);
+                }
+            }
+        }
+        return result;
+    }
+    ****/
+    
+     /*****
+     [Atomic] InfRat total(Resourcetype rtype) {
+        InfRat result = InfRat;
+        case (rtype) {
+            CPU => result = cpu;
+            Bandwidth => result = bw;
+            Memory => result = memory;
+        }
+        return result;
+    }
+    ****/
+    
+    /*****
+    Unit transfer(DeploymentComponent target, Rat amount, Resourcetype rtype) {
+        this.decrementResources(amount, rtype);
+        target!incrementResources(amount, rtype);
+    }
+    ****/
+
+    /****
+    Unit decrementResources(Rat amount, Resourcetype rtype) {
+        case (rtype) {
+            CPU => {
+                if (cpunext != InfRat) {
+                    assert (finvalue(cpunext) >= amount);
+                    cpunext = Fin(finvalue(cpunext) - amount);
+                }
+            }
+            Bandwidth => if (bwnext != InfRat) {
+                assert (finvalue(bwnext) >= amount);
+                bwnext = Fin(finvalue(bwnext) - amount);
+            }
+            Memory => if (memorynext != InfRat) {
+                assert (finvalue(memorynext) >= amount);
+                memorynext = Fin(finvalue(memorynext) - amount);
+            }
+        }
+    }
+    ****/
+
+    /****
+    Unit incrementResources(Rat amount, Resourcetype rtype) {
+        case (rtype) {
+            CPU => {
+                if (cpunext != InfRat) {
+                    cpunext = Fin(finvalue(cpunext) + amount);
+                }
+            }
+            Bandwidth => if (bwnext != InfRat) {
+                bwnext = Fin(finvalue(bwnext) + amount);
+            }
+            Memory => if (memorynext != InfRat) {
+                memorynext = Fin(finvalue(memorynext) + amount);
+            }
+        }
+    }
+    ***/
+
+    [Atomic] Unit setProvider(CloudProvider provider) {
+        this.cloudprovider = provider;
+    }
+    [Atomic] CloudProvider getProvider() { return cloudprovider; }
+    Bool acquire() {
+        Bool result = True;
+        if (cloudprovider != null) {
+            result = await cloudprovider!acquireInstance(this);
+        }
+        return result;
+    }
+    Bool release() {
+        Bool result = True;
+        if (cloudprovider != null) {
+            result = await cloudprovider!releaseInstance(this);
+        }
+        return result;
+    }
+
+    [Atomic] Time getCreationTime() { return creationTime; }
+    [Atomic] Rat getStartupDuration() { return startupDuration; }
+    [Atomic] Int getPaymentInterval() { return paymentInterval; }
+    [Atomic] Rat getCostPerInterval() { return costPerInterval; }
+
+   
+    [Atomic]
+    Bool matchesDescription(Map<Resourcetype, Rat> description) {
+        Bool result = True;
+        Set<Resourcetype> keys = keys(description);
+        while (result == True && (emptySet(keys)==False)) {
+            Resourcetype key = take(keys);
+            keys = remove(keys, key);
+            Rat value = lookupUnsafe(description, key);
+            if (key==CPU){
+               if (cpu != InfRat && finvalue(cpu) < value) result = False;
+            }
+            else if (key==Bandwidth){
+               if (bw != InfRat && finvalue(bw) < value) result = False;
+            }
+            else if (key==Memory){
+                if (memory != InfRat && finvalue(memory) - memoryconsumed < value)
+                    // Memory has different semantics - we ask for _free_
+                    // memory, not total memory
+                    result = False;
+            }
+            /*case (key) {
+            CPU => {
+                if (cpu != InfRat && finvalue(cpu) < value) result = False;
+            }
+            Bandwidth => {
+                if (bw != InfRat && finvalue(bw) < value) result = False;
+            }
+            Memory => {
+                if (memory != InfRat && finvalue(memory) - memoryconsumed < value)
+                    // Memory has different semantics - we ask for _free_
+                    // memory, not total memory
+                    result = False;
+                }
+            }*/
+        }
+        return result;
+    }
+   
+}
+
+
+
+// ** The Cloud Infrastructure
+//
+// Until these classes are part of the standard library, we define them here.
+
+
+// We need to find DCs from a worker object
+interface DeployedObject {
+  DeploymentComponent getDC();
+}
+
+
+// MapReduce
+interface MapReduce {
+    // invoked by client
+    List<Pair<Word, List<URI>>> mapReduce(List<Pair<URI, List<Word>>>
+        documents);
+    // invoked by workers
+    Unit finished(Worker w);
+}
+
+class MapReduce(CloudProvider p, Int maxMachines, Map<Resourcetype, Int> machineConfiguration)
+implements MapReduce {
+    Set<Worker> workers = set[];
+    Int nWorkers = 0;
+
+    List<Pair<Word, List<URI>>> mapReduce(List<Pair<URI, List<Word>>> items) {
+        List<Fut<List<Pair<Word, URI>>>> fMapResults = Nil;
+        Map<Word, List<URI>> intermediates = map[];
+        List<Pair<Word, Fut<List<URI>>>> fReduceResults = Nil;
+        List<Pair<Word, List<URI>>> result = Nil;
+
+        while (~isEmpty(items)) {
+            Pair<URI, List<Word>> item = head(items);
+            items = tail(items);
+            Worker w = await this!getWorker();
+            URI key = fst(item);
+            List<Word> value = snd(item);
+            Fut<List<Pair<Word, URI>>> fMap = w!invokeMap(key, value);
+            fMapResults = appendright(fMapResults, fMap);
+        }
+       
+        while (~isEmpty(fMapResults)) {
+            // "The MapReduce library groups together all intermediate values
+            // associated with the same intermediate key I ..." [ditto]
+	    Fut<List<Pair<Word, URI>>> fMapResult = head(fMapResults);
+            fMapResults = tail(fMapResults);
+            await fMapResult?;
+            List<Pair<Word, URI>> mapResult = fMapResult.get;
+            while (~isEmpty(mapResult)) {
+                Pair<Word, URI> keyValuePair = head(mapResult);
+                mapResult = tail(mapResult);
+                List<URI> inter = lookupDefault(intermediates, fst(keyValuePair), Nil);
+                intermediates = put(intermediates, fst(keyValuePair),
+                    Cons(snd(keyValuePair), inter));
+                }
+            }
+            // "... and passes them to the Reduce function.  The Reduce
+            // function, also written by the user, accepts an intermediate key I
+            // and a set of values for that key. It merges together these values
+            // to form a possibly smaller set of values.  Typically just zero or
+            // one outpout value is produced per Reduce invocation." [ditto]
+            Set<Word> keys = keys(intermediates);
+            while(~emptySet(keys)) {
+                Word key = take(keys);
+                keys = remove(keys, key);
+                List<URI> values = lookupUnsafe(intermediates, key);
+                Worker w = await this!getWorker();
+                Fut<List<URI>> fReduce = w!invokeReduce(key, values);
+                fReduceResults = appendright(fReduceResults, Pair(key, fReduce));
+            }
+            while (~isEmpty(fReduceResults)) {
+                Pair<Word, Fut<List<URI>>> reduceResult = head(fReduceResults);
+                fReduceResults = tail(fReduceResults);
+                Word key = fst(reduceResult);
+                Fut<List<URI>> fValues = snd(reduceResult);
+                await fValues?;
+                List<URI> values = fValues.get;
+                result = Cons(Pair(key, values), result);
+            }
+            // TODO: release all worker machines
+
+            return result;
+        }
+
+        Worker getWorker() {
+            if (emptySet(workers)) {
+                if (nWorkers < maxMachines) {
+                    //DeploymentComponent machine = await p!launchInstance(machineConfiguration);
+                    Worker w = new Worker(this);
+                    nWorkers = nWorkers + 1;
+                    workers = insertElement(workers, w);
+                }
+                await ~(emptySet(workers));
+            }
+            Worker result = take(workers);
+            workers = remove(workers, result);
+            // TODO: if we releaseInstance() acquireInstance() here
+            return result;
+        }
+        Unit finished(Worker w) {
+            // TODO: releaseInstance() here
+            workers = insertElement(workers, w);
+        }
+        // end customizable section---------------------
+    }
+
+
+interface Worker extends DeployedObject {
+  List<Pair<Word, URI>> invokeMap(URI key, List<Word> value);
+  List<URI> invokeReduce(Word key, List<URI> value);
+}
+
+class Worker(MapReduce master) implements Worker {
+    List<Pair<Word, URI>> mapResults = Nil;
+    List<URI> reduceResults = Nil;
+
+    // begin customizable section ------------------
+    Unit map(URI key, List<Word> value) {
+        List<Word> wordlist = value;
+        while (~(wordlist == Nil)) {
+            Word word = head(wordlist);
+            wordlist = tail(wordlist);
+            this.emitMapResult(word, key);
+        }
+    }
+    Unit reduce(Word key, List<URI> value) {
+        Set<URI> resultset = set(value); //removes duplicates
+        while (~(emptySet(resultset))) {
+            URI file = take(resultset);
+            resultset = remove(resultset, file);
+            this.emitReduceResult(file);
+        }
+    }
+
+    List<Pair<Word, URI>> invokeMap(URI key, List<Word> value) {
+        mapResults = Nil;
+        this.map(key, value);
+        master!finished(this);
+        List<Pair<Word, URI>> result = mapResults;
+        mapResults = Nil;
+        return result;
+    }
+
+    List<String> invokeReduce(Word key, List<URI> value) {
+        reduceResults = Nil;
+        this.reduce(key, value);
+        master!finished(this);
+        List<URI> result = reduceResults;
+        reduceResults = Nil;
+        return result;
+    }
+
+    Unit emitMapResult(Word key, URI value) {
+        mapResults = Cons(Pair(key, value), mapResults);
+    }
+    Unit emitReduceResult(URI value) {
+        reduceResults = Cons(value, reduceResults);
+    }
+
+    DeploymentComponent getDC() { return thisDC(); }
+
+}
+
+// SERVER
+
+
+data Image = Image;
+type Term = String;
+type PostingList = List<URI>;
+data Index = Index;
+
+
+
+interface Memkite {
+    Set<IndexDataBundle> process(CrawledData crawled_data);
+    // Unit provision(Set<IndexDataBundle> new_data);
+    Set<IndexDataBundle> fetchInitialConfiguration();
+    Set<IndexDataBundle> fetchNewData(MobileDevice mobile_device);
+}
+
+class CMemkite(CloudProvider provider) implements Memkite {
+    MapReduce engine;
+    Set<IndexDataBundle> initial_configuration = set[];
+    Set<MobileDevice> known_mobile_devices = set[];
+    // Possible extensions:
+    
+    // 1. have a pool of IndexDataBundle, reference it by id from
+    // provisioned_data and sent_data
+
+    // 2. periodically create new initial_configuration from new
+    // crawled data
+
+    // 3. for each mobile_device, decide whether to send out deltas or
+    // initial configuration.
+    // - is the current data too outdated?
+    // - is it too expensive to merge indices client-side?
+    // - (AppStore: "Restore Purchases")
+    Map<MobileDevice, Set<IndexDataBundle>> provisioned_data = map[];
+    Map<MobileDevice, Set<IndexDataBundle>> sent_data = map[];
+
+    {
+        engine = new MapReduce(provider, 5, map[Pair(CPU, 20), Pair(Memory, 10000)]);
+    }
+
+    // BACKEND DATA PROVISIONING
+    Set<IndexDataBundle> process(CrawledData crawled_data) {
+        List<Pair<URI, List<Word>>> documents = crawled_documents(crawled_data);
+        List<Pair<Word, List<URI>>> results = await engine!mapReduce(documents);
+
+        Set<IndexDataBundle> new_data = set[IndexDataBundle(documents, map(results))];
+        // maybe do this once a day, run processing once an hour
+        // i.e., do not update initial configuration every time
+        initial_configuration = union(initial_configuration, new_data);
+        while (~emptySet(new_data)) {
+            IndexDataBundle bundle = take(new_data);
+            new_data = remove(new_data, bundle);
+            Set<MobileDevice> mobile_devices = keys(provisioned_data);
+            while (~emptySet(mobile_devices)) {
+                MobileDevice mobile_device = take(mobile_devices);
+                mobile_devices = remove(mobile_devices, mobile_device);
+                provisioned_data = put(provisioned_data, mobile_device,
+                    insertElement(lookupUnsafe(provisioned_data, mobile_device), bundle));
+            }
+        }
+        return set[];
+    }
+    
+
+    // MOBILE_DEVICE COMMUNICATION
+    Set<IndexDataBundle> fetchInitialConfiguration() {
+        return initial_configuration;
+    }
+    Set<IndexDataBundle> fetchNewData(MobileDevice mobile_device) {
+        Set<IndexDataBundle> toSend = lookupDefault(provisioned_data, mobile_device, set[]);
+        Set<IndexDataBundle> alreadySent = lookupDefault(sent_data, mobile_device, set[]);
+        provisioned_data = put(provisioned_data, mobile_device, set[]);
+        sent_data = put(sent_data, mobile_device, union(toSend, alreadySent));
+        return difference(toSend, alreadySent);
+    }
+}
+
+// MOBILE DEVICE
+interface MobileDevice {
+    Unit pushButton();
+    Set<URI> search(Term query);
+}
+
+class CMobileDevice(Memkite memkite) implements MobileDevice {
+    Set<IndexDataBundle> local_data = set[];
+    Unit pushButton() {
+        if (emptySet(local_data)) {
+            local_data = await memkite!fetchInitialConfiguration();
+        } else {
+            Set<IndexDataBundle> new_data = await memkite!fetchNewData(this);
+            local_data = this.merge_data(local_data, new_data);
+        }
+    }
+
+    Set<IndexDataBundle> merge_data(Set<IndexDataBundle> current_data,
+        Set<IndexDataBundle> new_data)
+    {
+        return union(current_data, new_data);
+    }
+
+    // perform a search in all local indices and return result as set of strings
+    Set<URI> search(Term query) {
+        Set<IndexDataBundle> to_search = local_data;
+	Set<URI> results = set[];
+	while(~emptySet(to_search)) {
+            
+	    // iterate through local data
+	    // and search for query in each index
+	    // and add result to a resulting set
+	    IndexDataBundle index_data_bundle = take(to_search);
+            to_search = remove(to_search, index_data_bundle);
+	    // perhaps like this?
+            InvertedIndex inverted_index = inverted_index(index_data_bundle);
+	    // lookup - only store first uri for now
+	    PostingList posting_list = lookupDefault(inverted_index, query, list[]); 
+	    // note: could return entire posting list as result
+	    // but later steps will do "proper search", i.e. phrases
+	    while(~isEmpty(posting_list)) {
+		URI uri = head(posting_list);
+		posting_list = tail(posting_list);
+		results = insertElement(results, uri);
+	    }
+	}
+        return results;
+    }
+}
+
+{
+  List<Pair<URI, List<Word>>> documents =
+    list[Pair("url1",list["word1","word2"]),
+	 Pair("url2",list["word2","word2"])];
+
+  MapReduce engine = new MapReduce(null,2,map[Pair(CPU, 20)]);
+  engine!mapReduce(documents);
+
+
+/*    List<Pair<URI, List<Word>>> documents =
+    list[Pair("Agriculture in Canada",
+            list["canada","canada is","is one","one","one of",
+"of the","the largest","largest","agricultural","producers","producers and",
+"and exporters","exporters","exporters in","in the","the world","world",
+"world as","as with","with other","other developed","developed","nations",
+"nations the","the proportion","proportion","proportion of","of the",
+"the population","population","population and","and gdp","gdp","devoted",
+"devoted to","to agriculture","agriculture","fell","dramatically",
+"dramatically over","over the","the 20th","20th","century","century but",
+"but it","it remains","remains","remains an","an important","important",
+"element","element of","of the","the canadian","canadian","economy","economy a",
+"a wide","wide","range","range of","of agriculture","agriculture",
+"agriculture is","is practised","practised","practised in","in canada","canada",
+"canada from","from sprawling","sprawling","wheat","fields","fields of",
+"of the","the prairies","prairies","prairies to","to summer","summer","produce",
+"produce of","of the","the okanagan","okanagan","valley","valley in","in the",
+"the federal","federal","government","overview","overview of","of canadian",
+"canadian","agriculture","agriculture is","is the", "in"])
+, Pair("Celtic harp", list["celtic","harp","harp is","is a","a general","general",
+"term","referring","referring to","to a","a triangular","triangular","harp",
+"traditional","traditional to","to brittany","brittany","ireland","scotland",
+"scotland and","and wales","wales","wales it","it is","is known","known",
+"known as","as a","a telenn","telenn","telenn in","in breton","breton",
+"cláirseach","cláirseach in","in irish","irish","clàrsach","clàrsach in",
+"in scottish","scottish","gaelic","gaelic and","and telyn","telyn","telyn in",
+"in welsh","welsh","welsh in","in ireland","ireland","ireland and",
+"and scotland","scotland","scotland it","it was","was a","a wire-strung",
+"wire-strung","instrument","requiring","great","skill","skill and","and long",
+"long","practice","practice to","to play","play","play and","and was",
+"was associated","associated","associated with","with the","the gaelic",
+"gaelic","ruling","class","class in","in the","the republic","republic",
+"republic of","of ireland","ireland","ireland it","it appears","appears",
+"appears on","on the","the coins","coins","coins and","and coat","coat",
+"coat of","of arms","arms", "in"])];
+    
+    CloudProvider provider = new CloudProvider("Amazon");
+
+    DeploymentComponent dc = new DeploymentComponent("Memkite", map[Pair(CPU, 20)]);
+    Memkite memkite = new CMemkite(provider);
+
+    DeploymentComponent mobile_device_dc = new DeploymentComponent("MobileDevice", map[Pair(CPU, 5)]);
+    MobileDevice mobile_device = new CMobileDevice(memkite);
+
+    
+    await memkite!process(CrawledData(documents));
+    
+    Set<URI> search_before = await mobile_device!search("in");
+    
+    await mobile_device!pushButton();
+    
+    Set<URI> search_after = await mobile_device!search("in");
+    
+    provider!shutdown();      // Orderly termination of otherwise-endless loop
+*/
+}
+
+// Local Variables:
+// abs-debug-output: nil
+// abs-use-timed-interpreter: t
+// abs-clock-limit: 10
+// End:
+
