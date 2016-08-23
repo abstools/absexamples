@@ -147,6 +147,7 @@ public class EITest extends FrontendTest {
 , { "../collaboratory/examples/Termination/Running4.abs", null }
 , { "../collaboratory/examples/Termination/Test.abs", null }
 , { "../collaboratory/examples/TestCaseGeneration/Atbrox_5.abs", null }
+, { "../collaboratory/examples/TestCaseGeneration/Atbrox7.abs", null }
 , { "../collaboratory/examples/TestCaseGeneration/Fact.abs", null }
 , { "../collaboratory/examples/TestCaseGeneration/Forte14v2.abs", null }
 , { "../collaboratory/examples/TestCaseGeneration/IFM16.abs", null }
