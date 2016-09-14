@@ -1,4 +1,4 @@
-module Paper_no_dead;
+module NoDeadlock;
 
 
 interface  Ci{

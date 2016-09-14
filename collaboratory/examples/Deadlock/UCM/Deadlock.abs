@@ -1,4 +1,4 @@
-module Paper_dead2;
+module Deadlock;
 
 interface Ai{
     Unit m(Ci c,Bi b);
