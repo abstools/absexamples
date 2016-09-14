@@ -4,44 +4,48 @@ interface Ai{
     Unit m(Ci c,Bi b);
     Unit q();
 }
+
 interface Bi{
     Unit n(Ai a);
     Unit k();
 }
+
 interface Ci{
     Unit p(Bi b);
 }
 
 class A implements Ai{
-Unit m(Ci c,Bi b){
- Fut<Unit> f;
- f=c!p(b);
- f.get;
-}
-Unit q(){}
+    Unit m(Ci c,Bi b){
+	Fut<Unit> f;
+	f=c!p(b);
+	f.get;
+    }
+
+    Unit q(){}
 }
 
 class C implements Ci{
-Unit p(Bi b){
- Fut<Unit> f;
- f=b!k();
- await f?;
-}
+    Unit p(Bi b){
+	Fut<Unit> f;
+	f=b!k();
+	await f?;
+    }
 }
 
 class B implements Bi{
-Unit n(Ai a){
- Fut<Unit> f;
- f=a!q();
- f.get;
-}
-Unit k(){}
+    Unit n(Ai a){
+	Fut<Unit> f;
+	f=a!q();
+	f.get;
+    }
+
+    Unit k(){}
 }
 
 {
 Ai a=new A();
 Bi b=new B();
 Ci c=new C();
- a!m(c,b);
- b!n(a);
+a!m(c,b);
+b!n(a);
 }
