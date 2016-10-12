@@ -1,0 +1,185 @@
+
+/* Example: Web shop with database, and very simple elastic
+   monitoring, and load balancing
+
+Part 3: Adding the worker pool and the service endpoint
+
+Written by: Einar Broch Johnsen and S. Lizeth Tapia Tarifa
+*/
+
+module ScalableWebShop; 
+import * from ABS.DC; 
+
+
+interface Database {
+  Bool accessData(Duration deadline, Time calltime);
+}
+class Database (Int transactionCost) implements Database {
+
+  Bool accessData(Duration deadline, Time calltime) {
+    println("[Time: "+toString(timeValue(now()))+"] Database processing job, available time is "+toString(deadline));
+    Int cost = transactionCost;
+    while (cost>0) {
+    [Cost: 1 ] cost = cost -1; suspend;}
+    Rat remainingTime = timeDifference(calltime,now());
+    println("[Time: "+toString(timeValue(now()))+"] Database completed job");
+    if ((durationValue(deadline) - remainingTime) > 0){
+      println("[Time: "+toString(timeValue(now()))+"] Database access succeeded on time!");
+    } else {
+      println("[Time: "+toString(timeValue(now()))+"] Database access violated deadline!");
+    }    
+    return (durationValue(deadline) - remainingTime) > 0;
+  }
+}
+/*
+These are basically reusable containers which process jobs.
+The scaling in this model is in the number of Workers
+*/
+interface Worker {
+    Bool process(Rat taskCost,  Time started, Duration deadline);
+    DC getDC();
+}
+class WorkerObject(Database db) implements Worker {
+  
+  Bool process(Rat taskCost, Time started, Duration deadline) {
+    println("[Time: "+toString(timeValue(now()))+"] Worker start processing job");
+    [Cost: taskCost] skip;                                  
+    Duration remainingTime = subtractFromDuration(deadline, timeDifference(started,now()));
+    println("[Time: "+toString(timeValue(now()))+"] Remaining time until deadline is "+toString(remainingTime));
+    Bool success = await db!accessData(remainingTime,now());  
+    return success;
+  }
+  
+  DC getDC(){ return thisDC();}
+}
+
+/*
+Class to specify LoadBalancer
+The LoadBalancer will decide which worker gets the next job
+*/
+interface LoadBalancer {
+  Worker getWorker();
+  Unit releaseWorker(Worker w);
+  Unit addWorker(Worker w);
+  Worker firingWorker();
+  Int getNbrAvailableW();
+  Int getNbrInuseW();
+}
+
+class RoundRobinLoadBalancer()
+implements LoadBalancer {
+  List<Worker> available = Nil;
+  List<Worker> inuse = Nil;
+
+  Unit run(){
+      await duration(1, 1);
+      Int naval = await this!getNbrAvailableW();
+      println("[Time: "+toString(timeValue(now()))+"] Available workers:"+toString(naval));
+      Int ninuse = await this!getNbrInuseW();
+      println("[Time: "+toString(timeValue(now()))+"] In use workers:"+toString(ninuse));
+      println("***********************************************************************************");
+      this!run();
+    }
+
+  
+    Worker getWorker(){
+	await (available != Nil);
+	Worker w = head(available);
+	available = tail(available);
+	inuse = appendright(inuse,w); 
+	return w;
+      }
+
+    Unit releaseWorker(Worker w){
+	available = appendright(available,w);
+	inuse = without(inuse,w); 
+      }
+
+    Unit addWorker(Worker w){
+	available = appendright(available,w);
+      }
+
+    Worker firingWorker(){
+       await (available != Nil);
+       Worker w = head(reverse(available));
+       available =  without(available,w);
+       return w;
+     }
+
+     Int getNbrAvailableW() {
+       Int a =length(available);     
+       return a;}
+     
+    Int getNbrInuseW() {
+      Int i = length(inuse);
+      return i;
+    }
+      
+
+}
+
+
+// Class to specify Application API
+interface SE { 
+    Bool invokeService(Rat cost);
+}
+class ServiceEndpoint(LoadBalancer lb, Duration responseTime) implements SE {
+
+    Bool invokeService(Rat cost){
+      Time started = now();
+      [Cost: 1] skip;
+      Worker w =  await lb!getWorker();
+      Bool success = await w!process(cost,started,responseTime);
+      await lb!releaseWorker(w);
+      // Returns success-handler to client:
+      return success;
+    }
+
+  }
+
+{ // Main block
+
+  CloudProvider cloud = new CloudProvider("cloud");
+  println("[Time: "+toString(timeValue(now()))+"] Created the CloudProvider");
+
+  // Parameters
+  Int nResources = 25;
+  Int nWorkers=15;
+  Duration respTime = Duration(5);
+
+  // Create server machines
+  DC frontendServer = await cloud!launchInstance(map[Pair(Speed, 35)]);
+  DC backendServer = await cloud!launchInstance(map[Pair(Speed, 20)]);
+
+  // Deploy the system
+  [DC: backendServer] Database db = new Database(2);
+  [DC: frontendServer] LoadBalancer lb = new RoundRobinLoadBalancer();
+  [DC: frontendServer] SE se = new ServiceEndpoint(lb, respTime);
+
+
+//start workekers on the cloud
+     Int ctr = 0;
+      while (ctr<nWorkers) {
+	// No release point here!
+	Fut<DC> fs =  cloud!launchInstance(map[Pair(Speed, nResources)]);
+	DC vm = fs.get;
+	[DC: vm] Worker w = new WorkerObject(db);
+        lb!addWorker(w);
+	ctr=ctr+1;
+      }
+
+  await duration(1,1);
+
+  Bool success = await se!invokeService(20);
+  if (success){
+    println("[Time: "+toString(timeValue(now()))+"] Worker succeeded on time!");
+  } else {
+    println("[Time: "+toString(timeValue(now()))+"] Worker violated deadline!");}
+}
+
+
+// Local Variables:
+// abs-indent: 2
+// abs-target-language: erlang
+// abs-clock-limit: 5
+// End:

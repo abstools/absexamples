@@ -1,0 +1,55 @@
+/* Example: Web shop with database, and very simple elastic
+   monitoring, and load balancing
+
+   Part 1: The backend database
+
+   Written by: Einar Broch Johnsen and S. Lizeth Tapia Tarifa
+*/
+
+module Database; 
+import * from ABS.DC;
+
+
+interface Database {
+  Bool accessData(Duration deadline, Time calltime);
+}
+class Database (Int transactionCost) implements Database {
+
+  Bool accessData(Duration deadline, Time calltime) {
+    println("[Time: "+toString(timeValue(now()))+"] Database processing job, available time is "+toString(deadline));
+    Int cost = transactionCost;
+    while (cost>0) {
+    [Cost: 1 ] cost = cost -1; suspend;}
+    Rat remainingTime = timeDifference(calltime,now());
+    println("[Time: "+toString(timeValue(now()))+"] Database completed job");
+    if ((durationValue(deadline) - remainingTime) > 0){
+      println("[Time: "+toString(timeValue(now()))+"] Database access succeeded on time!");
+    } else {
+      println("[Time: "+toString(timeValue(now()))+"] Database access violated deadline!");
+    }    
+    return (durationValue(deadline) - remainingTime) > 0;
+  }
+}
+
+{ // Main block
+
+  DC backend = new DeploymentComponent("Backend Server", map[Pair(Speed, 20)]);
+  println("[Time: "+toString(timeValue(now()))+"] Server operational!");
+
+  [DC: backend] Database db = new Database(2);
+  println("[Time: "+toString(timeValue(now()))+"] Database operational!");
+
+  await duration(1,1);
+
+  Duration deadline = Duration(5);
+  await db!accessData(deadline,now());
+}
+
+
+
+
+// Local Variables:
+// abs-indent: 2
+// abs-target-language: erlang
+// abs-clock-limit: 3
+// End:

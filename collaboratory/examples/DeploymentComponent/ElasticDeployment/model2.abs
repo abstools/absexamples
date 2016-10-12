@@ -1,0 +1,99 @@
+
+/* Example: Web shop with database, and very simple elastic
+   monitoring, and load balancing
+
+Part 2: Connecting a worker to the backend database
+
+Written by: Einar Broch Johnsen and S. Lizeth Tapia Tarifa
+*/
+
+module Workers; 
+import * from ABS.DC;
+
+
+interface Database {
+  Bool accessData(Duration deadline, Time calltime);
+}
+class Database (Int transactionCost) implements Database {
+
+  Bool accessData(Duration deadline, Time calltime) {
+    println("[Time: "+toString(timeValue(now()))+"] Database processing job, available time is "+toString(deadline));
+    Int cost = transactionCost;
+    while (cost>0) {
+    [Cost: 1 ] cost = cost -1; suspend;}
+    Rat remainingTime = timeDifference(calltime,now());
+    println("[Time: "+toString(timeValue(now()))+"] Database completed job");
+    if ((durationValue(deadline) - remainingTime) > 0){
+      println("[Time: "+toString(timeValue(now()))+"] Database access succeeded on time!");
+    } else {
+      println("[Time: "+toString(timeValue(now()))+"] Database access violated deadline!");
+    }    
+    return (durationValue(deadline) - remainingTime) > 0;
+  }
+}
+
+/*
+These are basically reusable containers which process jobs.
+The scaling in this model is in the number of Workers
+*/
+interface Worker {
+    Bool process(Rat taskCost,  Time started, Duration deadline);
+    DC getDC();
+}
+class WorkerObject(Database db) implements Worker {
+  
+  Bool process(Rat taskCost, Time started, Duration deadline) {
+    println("[Time: "+toString(timeValue(now()))+"] Worker start processing job");
+    [Cost: taskCost] skip;                                  
+    Duration remainingTime = subtractFromDuration(deadline, timeDifference(started,now()));
+    println("[Time: "+toString(timeValue(now()))+"] Remaining time until deadline is "+toString(remainingTime));
+    // When we receive more jobs, this becomes a bottleneck
+    Bool success = await db!accessData(remainingTime,now());  
+    return success;
+  }
+  
+  DC getDC(){ return thisDC();}
+}
+
+{ // Main block
+ //parameters
+  Duration respTime = Duration(5);
+  Rat taskCost = 81; 
+  Int nResources = 25;
+  
+  // Create the cloud provider
+  CloudProvider cloud = new CloudProvider("cloud");
+  println("[Time: "+toString(timeValue(now()))+"] Created the CloudProvider");
+
+  // Create a virtual machine on the cloud
+  DC virtualServer = await cloud!launchInstance(map[Pair(Speed, nResources)]);
+  println("[Time: "+toString(timeValue(now()))+"] Virtual machine operational!");
+
+  // Create a server
+  DC backendServer =  new DeploymentComponent("Backend Server",map[Pair(Speed, 20)]);
+  println("[Time: "+toString(timeValue(now()))+"] Server operational!");
+
+  // Deploy database on a server
+  [DC: backendServer] Database db = new Database(2);
+  println("[Time: "+toString(timeValue(now()))+"] Database operational!");
+  
+  // Deploy worker on the cloud
+  [DC: virtualServer] Worker w1 = new WorkerObject(db);
+  println("[Time: "+toString(timeValue(now()))+"] Worker operational!");
+
+  await duration (1,1);
+
+  // Test the deployment 
+  Bool success = await w1!process(taskCost, now(), respTime);
+  if (success){
+    println("[Time: "+toString(timeValue(now()))+"] Worker succeeded on time!");
+  } else {
+    println("[Time: "+toString(timeValue(now()))+"] Worker violated deadline!");}
+}
+
+
+// Local Variables:
+// abs-indent: 2
+// abs-target-language: erlang
+// abs-clock-limit: 3
+// End:
