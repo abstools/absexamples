@@ -1,15 +1,46 @@
+/* 
+Example: Web shop with database, and very simple  
+monitoring,  load balancing and autoscaler
 
-/* Example: Web shop with database, and very simple elastic
-   monitoring, and load balancing
-
-Part 5: add the autoscalable component 
 
 Written by: Einar Broch Johnsen and S. Lizeth Tapia Tarifa
 */
 
-module ElasticWebShop; 
+module ScalableWebShop; 
 import * from ABS.DC;
 
+
+//************** For the accounting of the usage of resources**********************
+type MachineUseLog =  Map<DeploymentComponent,Pair<Time,Maybe<Time>>>;
+
+
+def Rat calcCost( MachineUseLog ml, Int cost, Int interval, Time now) =
+     case ml{
+       InsertAssoc(Pair(id, Pair(s,e)), mlt) => (costMachine(s,e,now)/interval)*cost + calcCost(mlt, cost, interval,now);
+	 EmptyMap => 0;
+       };
+
+def Rat costMachine(Time start ,Maybe<Time> end ,Time now) =
+case end {
+  Nothing => timeDifference(start, now);
+  Just(e) => timeDifference(start, e);
+};
+
+def Map<A, B> mapTail<A, B>(Map<A, B> map) = // remove the tail of the map
+  case map {
+  	EmptyMap => map;
+    InsertAssoc(head, tail) => tail;
+  };
+
+  def Pair<A, B> mapHead<A, B>(Map<A, B> map, Pair<A,B> default) = // remove the head of the map
+  case map {
+    EmptyMap => default;
+    InsertAssoc(head, tail) => head;
+  };
+
+ // *************************************************************************************
+
+  
 
 // The clients
 interface Client {
@@ -42,6 +73,7 @@ class OpenClient (SE ep, Int cycle, Rat cost, Int nbrOfJobs, Counter c) implemen
 }
 
 
+
 interface Database {
   Bool accessData(Duration deadline);
 }
@@ -57,10 +89,7 @@ class Database (Int transactionCost) implements Database {
   }
 }
 
-/*
-These are basically reusable containers which process jobs.
-The scaling in this model is in the number of Workers
-*/
+
 interface Worker {
     Bool process(Rat taskCost,  Time started, Duration deadline);
     DC getDC();
@@ -71,7 +100,6 @@ class WorkerObject(Database db) implements Worker {
     [Cost: taskCost] skip;                                  
     Rat spentTime = timeDifference(now(),started);
     Duration remainingTime = subtractFromDuration(deadline, timeDifference(started,now()));
-    // When we receive more jobs, this becomes a bottleneck
     Bool success = await db!accessData(remainingTime);  
     return success;
   }
@@ -111,7 +139,7 @@ implements LoadBalancer {
 
   
     Worker getWorker(){
-        [Cost: 1] skip;
+      [Cost: 1] skip;
 	await (available != Nil);
 	Worker w = head(available);
 	available = tail(available);
@@ -120,18 +148,18 @@ implements LoadBalancer {
       }
 
     Unit releaseWorker(Worker w){
-        [Cost: 1] skip;
+      [Cost: 1] skip;
 	available = appendright(available,w);
 	inuse = without(inuse,w); 
       }
 
     Unit addWorker(Worker w){
-        [Cost: 1] skip;
+      [Cost: 1] skip;
 	available = appendright(available,w);
       }
 
     Worker firingWorker(){
-       [Cost: 1] skip;
+      [Cost: 1] skip;
        await (available != Nil);
        Worker w = head(reverse(available));
        available =  without(available,w);
@@ -155,24 +183,21 @@ implements LoadBalancer {
 interface Autoscaler {}
 
 
-class Autoscaler(CloudProvider cloud, LoadBalancer lb, Int nbrOfWorkers, Int nResources,Database db, Int cycle)
+class Autoscaler(CloudProvider cloud, LoadBalancer lb, Int nbrOfWorkers, Int maxWorkers, Int nResources,Database db, Int cycle, Counter c)
 implements Autoscaler {
-
   Unit run(){
-      [Cost: 1] skip;
+    [Cost: 1] skip;
       Int ctr = 0;
       while (ctr<nbrOfWorkers) {
-	// No release point here!
 	Fut<DC> fs =  cloud!launchInstance(map[Pair(Speed, nResources)]);
 	DC vm = fs.get;
 	[DC: vm] Worker w = new WorkerObject(db);
         lb!addWorker(w);
 	Time startTime = await vm!getCreationTime();
+	await c!addMachine(vm,startTime);
 	ctr=ctr+1;
       }
       println("[Time: "+toString(timeValue(now()))+"] ***********INIT: CREATED "+toString(nbrOfWorkers)+" WORKERS");
-   
-
       this!resize();
     }
 
@@ -184,20 +209,19 @@ implements Autoscaler {
       Int available = await lb!getNbrAvailableW();
       Int inuse = await lb!getNbrInuseW();
       
-      if (available < ((available+inuse)/4))
+      if (available < ((available+inuse)/4) && (available+inuse)<=maxWorkers/2)
       {
 	ctr = 0;
-	Rat extraworkers= 2*inuse;
-        while (ctr<extraworkers) {
-  	  // No release point here!
+	Rat extraworkers= inuse;
+        while (ctr<extraworkers ) {
 	  Fut<DC> fs =  cloud!launchInstance(map[Pair(Speed, nResources)]);
 	  DC vm = fs.get;
 	  [DC: vm] Worker w = new WorkerObject(db);
 	  await lb!addWorker(w);
 	  Time startTime = await vm!getCreationTime();
+ 	  await c!addMachine(vm,startTime);
 	  ctr=ctr+1;
 	}
-//	println("[Time: "+toString(timeValue(now()))+"] NUMBER OF WORKERS IS "+toString(available+inuse));
       }
 
       if ((inuse/3 < available) && (available > nbrOfWorkers))
@@ -208,9 +232,9 @@ implements Autoscaler {
 	  Worker w = await lb!firingWorker();
 	  DC dc = await w!getDC();
           Bool down = await cloud!shutdownInstance(dc);
+	  await  c!addShutdown(dc, now());
 	  ctr=ctr+1;
 	}
-//	println("[Time: "+toString(timeValue(now()))+"] NUMBER OF WORKERS IS "+toString(available+inuse));
       }
       this!resize();     
     }
@@ -229,7 +253,6 @@ class ServiceEndpoint(LoadBalancer lb, Duration responseTime) implements SE {
       Worker w = await lb!getWorker();
       Bool success = await w!process(cost,started,responseTime);
       await lb!releaseWorker(w);
-      // Returns success-handler to client:
       return success;
     }
 
@@ -238,17 +261,24 @@ class ServiceEndpoint(LoadBalancer lb, Duration responseTime) implements SE {
 
     //**************** This is an object for accounting things in the model****************
 
-  interface Counter {
+interface Counter {
   Unit addSuccesses(Int amount);
   Unit addFails(Int amount);
+  Unit addMachine(DeploymentComponent id, Time startup);
+  Unit addShutdown(DeploymentComponent id, Time shutdown);
   Unit printSuccess();
   Unit printFail();
+  Unit calculateCost(Int cost, Int interval,Time until);
+  Unit printMachineUseLog();
+
 }
 
 class Counter() implements Counter {
   Int success = 0;
   Int fail = 0;
   Int cost = 0;
+
+  MachineUseLog machines = EmptyMap;
   
   Unit addSuccesses(Int amount) {success = success+amount;}
 
@@ -257,23 +287,59 @@ class Counter() implements Counter {
   Unit printSuccess(){println("[Time: "+toString(timeValue(now()))+"] ***********************************Total successes:"+ toString(success));}
   Unit printFail(){println("[Time: "+toString(timeValue(now()))+"] **************************************Total Fails:"+ toString(fail));}
 
+  Unit addMachine(DeploymentComponent id, Time startup){
+    machines =  InsertAssoc(Pair(id,Pair(startup,Nothing)), machines);
+  }
+  Unit addShutdown(DeploymentComponent id, Time shutdown){
+    Pair<Time,Maybe<Time>> tmp = lookupDefault(machines, id,Pair(Time(-1),Nothing));
+    
+    machines = InsertAssoc(Pair(id, Pair(fst(tmp),Just(shutdown))), removeKey(machines, id));
+  }
+
+  Unit calculateCost(Int cost, Int interval,Time until){
+    Rat calculatedCost = calcCost(machines, cost, interval, until);
+    println("[Time: "+toString(timeValue(now()))+"] **************************************Total Cost on the cloud (until time " +toString(timeValue(now()))+ "):"+ toString(calculatedCost));
+  }
+
+  Unit printMachineUseLog(){
+      MachineUseLog tmp =  machines;
+      DeploymentComponent tdc = null;
+      while (tmp != EmptyMap) {	
+	Pair<DeploymentComponent,Pair<Time,Maybe<Time>>> head = mapHead(tmp,Pair(tdc,Pair(Time(-1),Nothing)));
+	DeploymentComponent dc = fst(head);
+	String name = await dc!getName();
+	Pair<Time,Maybe<Time>> tmptime = snd(head);
+	Time frmt = fst(tmptime);
+	Maybe<Time> tot = snd(tmptime);
+
+	 if  (tot != Nothing){
+	   println("[Time: "+toString(timeValue(now()))+"]"+name+"->("+toString(timeValue(frmt))+","+toString(timeValue(fromJust(tot)))+")");
+	 }else{
+	   println("[Time: "+toString(timeValue(now()))+"]"+name+"->("+toString(timeValue(frmt))+",-)");
+	  }
+	 tmp = mapTail(tmp);	
+	}
+      }
+
 }
  //****************************************************
 
 { // Main block
 
-  CloudProvider cloud = new CloudProvider("cloud");
+   CloudProvider cloud = new CloudProvider("cloud");
   println("[Time: "+toString(timeValue(now()))+"] Created the CloudProvider");
 
   // Parameters:
    Int nResources = 25;
-   Int nWorkers=3;
-   Int interval = 3;
+   Int nWorkers=4;
+   Int maxWorkers = 25;
+   Int interval = 1;
    Duration respTime = Duration(5);
    Int nCloseClients = 4;
    Int nOpenClients = 10;
    Rat taskCost = 81; 
    Int nbrOfJobs = 2;
+   Int cost = 50;
 
    Counter c = new Counter(); 
 
@@ -284,11 +350,11 @@ class Counter() implements Counter {
   // Deploy the system
     [DC: backendServer] Database db = new Database(2);
     [DC: frontendServer] LoadBalancer lb = new RoundRobinLoadBalancer();
-    [DC: frontendServer] Autoscaler as = new Autoscaler(cloud,lb,nWorkers,nResources,db,interval);
+    [DC: frontendServer] Autoscaler as = new Autoscaler(cloud,lb,nWorkers,maxWorkers, nResources,db,interval, c);
     [DC: frontendServer] SE endpoint = new ServiceEndpoint(lb, respTime);
 
 
-    await duration(5,5);    
+    await duration(10,10);    
 
     // Start up the close clients
     Int nClients = nCloseClients;
@@ -300,7 +366,7 @@ class Counter() implements Counter {
    println("[Time: "+toString(timeValue(now()))+"] *********CREATED " +toString(nCloseClients)+" CLOSE CLIENTS  WITH "  +toString(nbrOfJobs)+ " JOBS EACH");
    
 
-    await duration(5,5);
+    await duration(10,10);
 
     // Start up the open clients
     nClients = nOpenClients;
@@ -311,7 +377,7 @@ class Counter() implements Counter {
     }
     println("[Time: "+toString(timeValue(now()))+"] ********CREATED " +toString(nOpenClients)+" OPEN CLIENTS  WITH "  +toString(nbrOfJobs)+ " JOBS EACH");
 
-    await duration(5,5);
+    await duration(10,10);
     
     // Start up the close clients
     nClients = nCloseClients;
@@ -322,7 +388,7 @@ class Counter() implements Counter {
     }
   println("[Time: "+toString(timeValue(now()))+"] **********CREATED " +toString(nCloseClients)+" CLOSE CLIENTS  WITH "  +toString(nbrOfJobs)+ " JOBS EACH");
 
-    await duration(5,5);
+    await duration(10,10);
 
     // Start up the open clients
     nClients = nOpenClients;
@@ -337,6 +403,10 @@ class Counter() implements Counter {
     await c!printSuccess();
     await c!printFail();
 
+
+
+   await c!calculateCost(cost,interval,now());
+   await c!printMachineUseLog();
     
   }
 
@@ -344,7 +414,7 @@ class Counter() implements Counter {
 // Local Variables:
 // abs-indent: 2
 // abs-target-language: erlang
-// abs-clock-limit: 30
+// abs-clock-limit: 50
 // End:
 
   
