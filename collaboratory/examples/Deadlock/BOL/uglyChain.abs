@@ -1,6 +1,6 @@
 
 
-module uglyChain;
+module UglyChain;
 
 interface Object {
 }
