@@ -60,10 +60,10 @@ class TaskImpl implements Task{
   Task t1 = new local TaskImpl();
   Task t2 = new local TaskImpl();
   Task t3 = new local TaskImpl();  
-  List<Task> l = Cons( t1, Cons( t2, Cons( t3, Nil)));
+  List<Task> l = list[ t1, t2, t3 ];
   
   TaskQueueInter q = new local TaskQueue();
-  Fut<Unit> f = q!addTasks();
+  Fut<Unit> f = q!addTasks(l);
   await f?;
   q!consumeSync();
 }
