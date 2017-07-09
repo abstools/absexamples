@@ -32,13 +32,6 @@ def Maybe<Task> chooseTs( WFlow wf, Set<TaskID> tids) =
     then Just(h)
     else chooseTs(remove(wf, h), tids);
 
-  // Return all futures (B) such that map entry A->B exists in `replies' and A is in `tids'
-/*def List<Fut<Bool>> filterFut( Set<TaskID> tids,  Map<TaskID,Fut<Bool>> replies) =
-case emptySet(tids) {
-  True => Nil;
-  False => let (TaskID h) = take(tids)
-  in Cons(lookupUnsafe(replies, h),filterFut(remove(tids, h),replies));};*/
-
 def List<Fut<Bool>> filterFut( Set<TaskID> tids,  Map<TaskID,Fut<Bool>> replies) =
   if emptySet(tids) 
   then Nil
