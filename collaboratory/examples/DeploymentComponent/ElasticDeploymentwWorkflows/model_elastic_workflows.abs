@@ -1,0 +1,431 @@
+/* 
+Example: Web shop which handles request with workloads 
+monitoring,  load balancing and autoscaler
+
+
+Written by: Einar Broch Johnsen and S. Lizeth Tapia Tarifa
+*/
+
+module ScalableWebShop; 
+import * from ABS.DC;
+
+
+//************** For the accounting of the usage of resources**********************
+type MachineUseLog =  Map<DeploymentComponent,Pair<Time,Maybe<Time>>>;
+
+type TaskID = Int;
+
+// A work flow is a list of tasks.
+type WFlow = Set<Task>; 
+
+// Each task consists of a task ID and a list of tasks that must be completed for this task to begin
+data Task = Task(TaskID taskID, Rat cost, Set<TaskID> dependencies);
+
+// choose an arbitrary operation from `wf' whose dependencies have been
+// started.  Started dependencies are given in `tids'.
+def Maybe<Task> chooseTs( WFlow wf, Set<TaskID> tids) =
+   if emptySet(wf)
+   then Nothing
+   else
+    let (Task h) = take(wf) in
+    if isSubset(dependencies(h),tids)
+    then Just(h)
+    else chooseTs(remove(wf, h), tids);
+
+  // Return all futures (B) such that map entry A->B exists in `replies' and A is in `tids'
+/*def List<Fut<Bool>> filterFut( Set<TaskID> tids,  Map<TaskID,Fut<Bool>> replies) =
+case emptySet(tids) {
+  True => Nil;
+  False => let (TaskID h) = take(tids)
+  in Cons(lookupUnsafe(replies, h),filterFut(remove(tids, h),replies));};*/
+
+def List<Fut<Bool>> filterFut( Set<TaskID> tids,  Map<TaskID,Fut<Bool>> replies) =
+  if emptySet(tids) 
+  then Nil
+  else let (TaskID h) = take(tids) in
+       appendright(filterFut(remove(tids, h),replies),lookupUnsafe(replies, h));
+
+def Rat calcCost( MachineUseLog ml, Int res, Int interval, Time now) =
+if emptyMap(ml) then 0 else
+let (DeploymentComponent id) = take(keys(ml)) in
+let (Maybe<Pair<Time,Maybe<Time>>> p) = lookup(ml,id) in
+case p{
+  Nothing => 0 ;
+  Just(Pair(s,e)) => (costMachine(s,e,now)/interval)*res + calcCost(removeKey(ml,id), res, interval,now);
+  };
+
+def Rat costMachine(Time start ,Maybe<Time> end ,Time now) =
+case end {
+  Nothing => timeDifference(start, now);
+  Just(e) => timeDifference(start, e);
+};
+
+
+// The clients
+interface Client {
+    }
+
+// Client with synchronous calls (i.e., does not flood the system)
+class ClosedClient (SE ep, Int cycle, Int nbrOfWf, Counter c, Duration respTime,  WFlow wf ) implements Client {
+  Int wfcount = 0;
+  Unit run() {
+    await duration(cycle, cycle);
+    Bool result =  await ep!invokeService(wf, respTime);
+    if (result == True) {await c!addSuccesses(1);} else {await c!addFails(1);}
+    wfcount = wfcount + 1;
+    if (wfcount < nbrOfWf) { this!run(); }
+  }
+}
+
+// Client with asynchronous calls (i.e., floods the system)
+class OpenClient (SE ep, Int cycle,  Int nbrOfWf, Counter c, Duration respTime,  WFlow wf) implements Client {
+  Int wfcount = 0;
+    Unit run() { 
+      Fut<Bool> fresult =  ep!invokeService(wf, respTime);
+	wfcount = wfcount + 1;
+	await duration(cycle, cycle);
+	if (wfcount < nbrOfWf) { this!run(); }
+	await fresult?; 
+	Bool result = fresult.get;
+	if (result == True)  {await c!addSuccesses(1);} else {await c!addFails(1);}
+      }
+}
+
+
+interface Worker {
+  Bool processTask(Rat taskCost, Time started, Duration deadline,  List<Fut<Bool>> dependencies);
+    DC getDC();
+}
+class WorkerObject(LoadBalancer lb) implements Worker {
+  
+// the call will wait for all the dependencies to be finished before it execute the task.
+ Bool processTask(Rat taskCost, Time started, Duration deadline,  List<Fut<Bool>> dependencies){
+    while(dependencies != Nil) {
+      Fut<Bool> dep =  head(dependencies);
+      dependencies = tail(dependencies);
+      await dep?;
+    }
+    [Cost: taskCost] skip;                                  
+    Rat spentTime = timeDifference(now(),started);
+    lb!releaseWorker(this);
+    return (spentTime <= durationValue(deadline));
+  } 
+
+  DC getDC(){ return thisDC();}
+}
+
+/*
+
+Class to specify LoadBalancer
+The LoadBalancer will decide which worker gets the next job
+*/
+interface LoadBalancer {
+  Worker getWorker();
+  Unit releaseWorker(Worker w);
+  Unit addWorker(Worker w);
+  Worker firingWorker();
+  Int getNbrAvailableW();
+  Int getNbrInuseW();
+}
+
+class RoundRobinLoadBalancer()
+implements LoadBalancer {
+  List<Worker> available = list[];
+  List<Worker> inuse = list[];
+
+    Unit run(){
+      await duration(1, 1);
+      Int naval = length(available);
+      println("[Time: "+toString(timeValue(now()))+"] Available workers:"+toString(naval));
+      Int ninuse = length(inuse);
+      println("[Time: "+toString(timeValue(now()))+"] In use workers:"+toString(ninuse));
+      println("[Time: "+toString(timeValue(now()))+"] NUMBER OF WORKERS IS "+toString(naval+ninuse));
+      println("***********************************************************************************");
+      this!run();
+    }
+
+  
+    Worker getWorker(){
+	await (!isEmpty(available));
+	Worker w = head(available);
+	available = tail(available);
+	inuse = appendright(inuse,w); 
+	return w;
+      }
+
+    Unit releaseWorker(Worker w){
+	available = appendright(available,w);
+	inuse = without(inuse,w); 
+      }
+
+    Unit addWorker(Worker w){
+	available = appendright(available,w);
+      }
+
+      Worker firingWorker(){
+       await (!isEmpty(available));
+       Worker w = head(reverse(available));
+       available =  without(available,w);
+       return w;
+     }
+
+     Int getNbrAvailableW() {
+       return length(available);}
+     
+    Int getNbrInuseW() {
+      return length(inuse);}
+      
+
+}
+
+interface Autoscaler {}
+
+
+class Autoscaler(CloudProvider cloud, LoadBalancer lb, Int nbrOfWorkers, Int nResources, Int cycle, Counter c)
+implements Autoscaler {
+
+  Unit run(){
+      Int ctr = 0;
+      while (ctr<nbrOfWorkers) {
+	Fut<DC> fs =  cloud!launchInstance(map[Pair(Speed, nResources)]);
+	DC vm = fs.get;
+	[DC: vm] Worker w = new WorkerObject(lb);
+        lb!addWorker(w);
+	Time startTime = await vm!getCreationTime();
+	await c!addMachine(vm,startTime);
+	ctr=ctr+1;
+      }
+      println("[Time: "+toString(timeValue(now()))+"] ***********INIT: CUREATED "+toString(nbrOfWorkers)+" WORKERS");
+      this!resize();
+    }
+
+    
+    Unit resize(){
+      Int ctr = 0;
+      await duration(cycle, cycle);
+      Int available = await lb!getNbrAvailableW();
+      Int inuse = await lb!getNbrInuseW();
+      
+      if (available < ((available+inuse)/3))
+      {
+	ctr = 0;
+	Rat extraworkers= 4*inuse;
+        while (ctr<extraworkers) {
+	  Fut<DC> fs =  cloud!launchInstance(map[Pair(Speed, nResources)]);
+	  DC vm = fs.get;
+	  [DC: vm] Worker w = new WorkerObject(lb);
+	  await lb!addWorker(w);
+	  Time startTime = await vm!getCreationTime();
+ 	  await c!addMachine(vm,startTime);
+	  ctr=ctr+1;
+	}
+      }
+
+      if ((inuse/3 < available) && (available > nbrOfWorkers))
+      {
+	ctr = 0;
+	Rat removeworkers= available/2;
+        while (ctr<removeworkers) {
+	  Worker w = await lb!firingWorker();
+	  DC dc = await w!getDC();
+          Bool down = await cloud!shutdownInstance(dc);
+	  await  c!addShutdown(dc, now());
+	  ctr=ctr+1;
+	}
+      }
+      this!resize();     
+    }
+ }
+
+
+// Class to specify Application API
+interface SE { 
+    Bool invokeService(WFlow wf, Duration deadline);
+}
+class ServiceEndpoint(LoadBalancer lb) implements SE {
+
+  Bool invokeService(WFlow wf,  Duration deadline){
+      Time started = now();
+      Bool success = await this!manageWorkFlow(started, wf,  deadline);
+      return success;
+    }
+
+    // Private methods:
+
+    // This method will redistribute the tasks in the workflows with
+    // the corresponding dependencies
+    Bool manageWorkFlow(Time started,  WFlow wf,  Duration deadline){
+    Bool success = True;
+    Map<TaskID,Fut<Bool>> replies = map[];
+    Worker w = null;
+    while (!emptySet(wf)) {
+      Maybe<Task> maybeTs= chooseTs(wf, keys(replies));
+      case maybeTs {
+        Nothing => println("[Time: "+toString(timeValue(now()))+"] We found circular dependencies in work flow with task " + toString(wf));
+        Just(tsk) =>{ // Found a new schedulable task
+	  w = await lb!getWorker();
+           Fut<Bool> reply =  w!processTask(cost(tsk),started, deadline, filterFut(dependencies(tsk),replies));
+          replies = insert(replies, Pair(taskID(tsk),reply));
+          wf = remove(wf,tsk);
+        }
+      }
+    }
+    while(!emptyMap(replies)) {
+      TaskID tid =  take(keys(replies));
+      Fut<Bool> reply = lookupUnsafe(replies, tid);
+      await reply?;
+      Bool result = reply.get;
+      success = (result && success);
+      replies = removeKey(replies,tid);
+      //Note that the worker itself will get released
+    }
+    return success;
+  }
+
+  }
+
+
+    //**************** This is an object for accounting things in the model****************
+
+  interface Counter {
+  Unit addSuccesses(Int amount);
+  Unit addFails(Int amount);
+  Unit addMachine(DeploymentComponent id, Time startup);
+  Unit addShutdown(DeploymentComponent id, Time shutdown);
+  Unit printSuccess();
+  Unit printFail();
+
+  Rat calculateCost(Int res, Int interval,Time until);
+  Unit printMachineUseLog();
+
+}
+
+class Counter() implements Counter {
+  Int success = 0;
+  Int fail = 0;
+  Int cost = 0;
+
+  MachineUseLog machines = map[];
+  
+  Unit addSuccesses(Int amount) {success = success+amount;}
+
+  Unit addFails(Int amount){fail = fail+amount;}
+
+  Unit printSuccess(){println("[Time: "+toString(timeValue(now()))+"] ***********************************Total successes:"+ toString(success));}
+  Unit printFail(){println("[Time: "+toString(timeValue(now()))+"] **************************************Total Fails:"+ toString(fail));}
+
+  Unit addMachine(DeploymentComponent id, Time startup){
+    machines =  insert(machines, Pair(id,Pair(startup,Nothing)));
+  }
+  Unit addShutdown(DeploymentComponent id, Time shutdown){
+    Pair<Time,Maybe<Time>> tmp = lookupDefault(machines, id,Pair(Time(-1),Nothing));
+    
+    machines = insert(removeKey(machines, id),Pair(id, Pair(fst(tmp),Just(shutdown))));
+  }
+
+  Rat calculateCost(Int res, Int interval,Time until){
+    return calcCost(machines, res, interval, until);}
+        Unit printMachineUseLog(){
+      Set<DeploymentComponent> machineIDs =  keys(machines);
+      while (!emptySet(machineIDs)) {	
+	DeploymentComponent dc = take(machineIDs);
+	String name = await dc!getName();
+	Pair<Time,Maybe<Time>> dctime = lookupDefault(machines,dc,Pair(Time(-1),Nothing));
+	Time frmt = fst(dctime);
+	Maybe<Time> tot = snd(dctime);
+	 if  (tot != Nothing){
+	   println("[Time: "+toString(timeValue(now()))+"]"+name+"->("+toString(timeValue(frmt))+","+toString(timeValue(fromJust(tot)))+")");
+	 }else{
+	   println("[Time: "+toString(timeValue(now()))+"]"+name+"->("+toString(timeValue(frmt))+",-)");
+	  }
+	 machineIDs = remove(machineIDs,dc);	
+	}
+      }
+}
+ //****************************************************
+
+{ // Main block
+
+  CloudProvider cloud = new CloudProvider("cloud");
+  println("[Time: "+toString(timeValue(now()))+"] Created the CloudProvider");
+
+   // number of resources:
+   Int nResources = 50;
+   // interval used by the autoscaler to increase/decrease the number of machines
+   Int interval = 2;
+   // initial number of workers
+   Int nWorkers=5;
+   //expected response time of a request with a workflow
+   Duration respTime = Duration(60);
+   // number of clients:
+   Int nCloseClients = 30;
+   Int nOpenClients = 80;
+   // standartd workflow request with average costs of taks:
+   WFlow wf = set[Task(1,70,set[]), Task(2,85,set(list[1])),Task(3,60,set(list[1])), Task(4,73,set(list[2,3])), Task(5,81,set(list[4]))];
+    // number of jobs
+    Int nbrOfWf = 4;
+
+    Counter c = new Counter(); 
+    LoadBalancer lb = new RoundRobinLoadBalancer();
+    Autoscaler as = new Autoscaler(cloud,lb,nWorkers,nResources,interval,c);
+    SE endpoint = new ServiceEndpoint(lb);
+
+    await duration(50,50);
+
+    // Start up the close clients
+    Int nClients = nCloseClients;
+    while (nClients > 0) {
+	// closed client scenario:
+         new ClosedClient(endpoint, 5, nbrOfWf,c, respTime, wf);
+        nClients = nClients - 1;
+    }
+   println("[Time: "+toString(timeValue(now()))+"] *********CREATED " +toString(nCloseClients)+" CLOSE CLIENTS  WITH "  +toString(nbrOfWf)+ " JOBS EACH");
+   
+
+    await duration(50,50);
+
+    // Start up the open clients
+    nClients = nOpenClients;
+    while (nClients > 0) {
+       // open client scenario:
+        new OpenClient(endpoint, 1,  nbrOfWf,c, respTime, wf);
+        nClients = nClients - 1;
+    }
+    println("[Time: "+toString(timeValue(now()))+"] ********CREATED " +toString(nOpenClients)+" OPEN CLIENTS  WITH "  +toString(nbrOfWf)+ " JOBS EACH");
+
+    await duration(50,50);
+    
+    // Start up the close clients
+    nClients = nCloseClients;
+    while (nClients > 0) {
+	// closed client scenario:
+         new ClosedClient(endpoint, 5, nbrOfWf,c, respTime, wf);
+        nClients = nClients - 1;
+    }
+  println("[Time: "+toString(timeValue(now()))+"] **********CREATED " +toString(nCloseClients)+" CLOSE CLIENTS  WITH "  +toString(nbrOfWf)+ " JOBS EACH");
+
+    await duration(50,50);
+
+    // Start up the open clients
+    nClients = nOpenClients;
+    while (nClients > 0) {
+       // open client scenario:
+        new OpenClient(endpoint, 1, nbrOfWf,c, respTime, wf);
+        nClients = nClients - 1;
+    }
+    println("[Time: "+toString(timeValue(now()))+"] CREATED " +toString(nOpenClients)+"  OPEN CLIENTS  WITH "  +toString(nbrOfWf)+ " JOBS EACH");
+
+    await duration(220,220);
+    await c!printSuccess();
+    await c!printFail();
+    
+  }
+
+
+// Local Variables:
+// abs-indent: 2
+// abs-target-language: erlang
+// abs-clock-limit: 310
+// End:
+
+  
