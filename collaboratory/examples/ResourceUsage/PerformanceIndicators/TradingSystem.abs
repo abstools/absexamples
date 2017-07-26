@@ -3,13 +3,6 @@ import * from ABS.StdLib;
 
 def List<A> addelem<A>(List<A> list, A p) = Cons(p, list); 
 
-  
-  def List<A> reverse<A>(List<A> list) =
-  case list { 
-     Cons(hd, tl) => appendright(reverse(tl), hd); 
-     Nil => Nil; 
-  };
-
 def B mylookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
   case ms {
      InsertAssoc(Pair(k, y), _) => y;
@@ -972,7 +965,6 @@ case info {
     DEBIT_NOT_ENOUGH_MONEY => "DEBIT_NOT_ENOUGH_MONEY";
 };
 
-type Exception = String;
 type CreditInfo = String;
 
 type Pin = Int;
