@@ -831,7 +831,6 @@ case info {
     DEBIT_NOT_ENOUGH_MONEY => "DEBIT_NOT_ENOUGH_MONEY";
 };
 
-type Exception = String;
 type CreditInfo = String;
 
 type Pin = Int;
