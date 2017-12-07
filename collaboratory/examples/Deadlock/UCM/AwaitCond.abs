@@ -1,5 +1,7 @@
 module AwaitCond;
 
+
+
 interface Ai{
     Bi getField();
 
