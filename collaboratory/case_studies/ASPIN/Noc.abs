@@ -1,0 +1,266 @@
+/*************************************
+NETWORK OF CHIPS -- X-first ROUTING ALGORITHM
+FIRST VERSION BY: Crystal Chang Din and S. Lizeth Tapia Tarifa
+MODIFIED BY (2015.05.15): Crystal Chang Din (Reduced Version : for verification)
+MODIFIED BY (2018.03.23): Eduard Kamburjan (Update to ABS 1.5, added println for Simulation)
+************************************/
+
+
+/*************************************
+The MIT License
+
+Copyright (c) 2015 Crystal Chang Din
+
+Permission is hereby granted, free of charge, 
+to any person obtaining a copy of this software and 
+associated documentation files (the "Software"), to 
+deal in the Software without restriction, including 
+without limitation the rights to use, copy, modify, 
+merge, publish, distribute, sublicense, and/or sell 
+copies of the Software, and to permit persons to whom 
+the Software is furnished to do so, 
+subject to the following conditions:
+
+The above copyright notice and this permission notice 
+shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR 
+ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+************************************/
+  
+
+module NoC_Model;
+
+
+type Pos = Pair<Int, Int>; // (x,y)
+type Packet = Pair<Int, Pos>; // (id, destination)
+type Buffer = Int;
+data Direction  = N | W | S | E | NONE ;  // 0 1 2 3
+data Port  = P(Bool inState , Bool outState, Router rId, Buffer buff); // (in, out, router, buffer)
+type Ports = Map<Direction,Port>;
+
+
+// Packets Observers
+def Int idPk(Packet p) = fst(p);  // id
+def Pos addressPk(Packet p) = snd(p); // destination
+
+
+// Positions Observers
+def Int x(Pos p) =  fst(p);
+def Int y(Pos p) =  snd(p);
+ 
+
+// Update port state
+
+// set the state of the in port
+def Port inSet(Port p, Bool v) = P(v, outState(p), rId(p), buff(p));
+// set the state of the out port
+def Port outSet(Port p, Bool v) = P(inState(p), v, rId(p), buff(p));
+// increase the buffer
+def Port increaseBuff(Port p) = P(inState(p), outState(p), rId(p), buff(p)+1);
+// decrease the buffer
+def Port decreaseBuff(Port p) = P(inState(p), outState(p), rId(p), buff(p)-1);
+
+
+def Pos nextAds(Direction d, Pos current) = 
+ case d {
+       N => Pair(x(current), y(current)+1);
+       S => Pair(x(current), y(current)-1);
+       E => Pair(x(current)+1, y(current));
+       W => Pair(x(current)-1, y(current));
+       NONE => Pair(x(current), y(current));
+ };
+
+
+// xyRouting algorithm 
+def Direction xFirstRouting(Pos destination, Pos current) =
+case x(current) < x(destination) { 
+  True => E ;
+  False => 
+    case x(current) > x(destination) {
+      True => W ;
+      False =>  
+        case y(current) < y(destination) {
+          True => S ;
+          False =>  
+             case y(current) > y(destination) {
+              True => N ;
+              False =>  NONE;
+             };
+        };
+    };              
+ };
+
+
+// calculate the distance of a packet from its current postition to its destination
+// for the X-first routing algorithm
+def Rat distance(Pos destination, Pos current) =   abs( x(destination) - x(current) ) + abs( y(destination) - y(current));         
+
+
+// calculate the opossite direction
+def Direction opposite(Direction d) = 
+    case d  {
+       N => S;
+       S => N;
+       E => W;
+       W => E;	
+       NONE => NONE;
+    };
+
+
+def Bool eqPos(Pos ps1, Pos ps2) = x(ps1) == x(ps2) && y(ps1) == y(ps2);
+
+
+//////////////////////////////////////////////////////////////
+/////////////////////// INTERFACE ////////////////////////////
+//////////////////////////////////////////////////////////////	
+
+interface Router{ 
+    // set the neighbors ports
+    Unit setPorts(Router e, Router w, Router n, Router s);
+
+    // get package
+    Unit getPk(Packet pk, Direction srcPort); // router address is a class attribute
+
+    // redirect package
+    Unit redirectPk(Packet pk, Direction srcPort); // router address is a class attribute
+
+}
+
+
+//////////////////////////////////////////////////////////////
+///////////////////////// CLASS //////////////////////////////
+//////////////////////////////////////////////////////////////
+
+class RouterImp(Pos address, Int buffSize) implements Router {
+   
+   Ports ports = map[];
+   // number of receided packages
+   Set<Packet> receivedPks = set[];
+   
+   Unit setPorts(Router e, Router w, Router n, Router s){
+      ports =  map[Pair(N ,P( True , True, n, 0)),
+                   Pair(S ,P(True , True, s, 0)),
+		           Pair(E ,P(True , True, e, 0)),
+                   Pair(W ,P(True , True, w, 0))];
+   }
+
+
+   // originally in REBECA was called giveAck 
+   Unit getPk(Packet pk, Direction srcPort){ 
+   	   if (!eqPos(addressPk(pk),address)){  // router address is a class attribute
+          await buff(fromJust(lookup(ports,srcPort))) < buffSize;
+	      ports = put(ports,srcPort,increaseBuff(fromJust(lookup(ports,srcPort))));
+	      println(toString(address)+" getPk "+toString(pk)+" redirect to "+toString(srcPort));
+	      this!redirectPk(pk,srcPort);
+	   }else{
+	      // record all packets succesfully received
+	      println(toString(address)+" getPk "+toString(pk)+" received");
+          receivedPks = insertElement(receivedPks, pk);  
+       }
+   }
+
+
+   // originally in REBECA was called sendReq
+   Unit redirectPk(Packet pk, Direction srcPort){ 
+   
+       Direction direc = xFirstRouting(addressPk(pk), address);  // router address is a class attribute
+
+	   await (inState(fromJust(lookup(ports,srcPort))) == True) &&
+	         (outState(fromJust(lookup(ports,direc))) == True);
+	   ports = put(ports,srcPort,inSet(fromJust(lookup(ports,srcPort)),False));
+	   ports = put(ports,direc,outSet(fromJust(lookup(ports,direc)),False));
+           
+	   Router r = rId(fromJust(lookup(ports,direc)));
+	   Fut<Unit> f = r!getPk(pk,opposite(direc));
+           await f?;
+
+       ports = put(ports,srcPort,decreaseBuff(fromJust(lookup(ports,srcPort))));
+	   ports = put(ports,srcPort,inSet(fromJust(lookup(ports,srcPort)),True));
+	   ports = put(ports,direc,outSet(fromJust(lookup(ports,direc)),True));
+
+   }
+	   
+
+}   
+
+
+{
+
+
+// (x, y), bufferSize, behavior
+Router r00 = new RouterImp(Pair(0, 0), 2);
+Router r10 = new RouterImp(Pair(1, 0), 2);
+Router r20 = new RouterImp(Pair(2, 0), 2);
+Router r30 = new RouterImp(Pair(3, 0), 2);
+
+Router r01 = new RouterImp(Pair(0, 1), 2);
+Router r11 = new RouterImp(Pair(1, 1), 2);   
+Router r21 = new RouterImp(Pair(2, 1), 2);
+Router r31 = new RouterImp(Pair(3, 1), 2);   
+
+Router r02 = new RouterImp(Pair(0, 2), 2);
+Router r12 = new RouterImp(Pair(1, 2), 2);   
+Router r22 = new RouterImp(Pair(2, 2), 2);
+Router r32 = new RouterImp(Pair(3, 2), 2);   
+
+Router r03 = new RouterImp(Pair(0, 3), 2);
+Router r13 = new RouterImp(Pair(1, 3), 2);   
+Router r23 = new RouterImp(Pair(2, 3), 2);
+Router r33 = new RouterImp(Pair(3, 3), 2);   
+
+ 
+   // (E, W, N, S)
+   r00.setPorts(r10,null,null,r01);
+   r10.setPorts(r20,r00,null,r11);
+   r20.setPorts(r30,r10,null,r21);
+   r30.setPorts(null,r20,null,r31);
+
+   r01.setPorts(r11,null,r00,r02);
+   r11.setPorts(r21,r01,r10,r12);
+   r21.setPorts(r31,r11,r20,r22);
+   r31.setPorts(null,r21,r30,r32);
+
+   r02.setPorts(r12,null,r01,r03);
+   r12.setPorts(r22,r02,r11,r13);
+   r22.setPorts(r32,r12,r21,r23);
+   r32.setPorts(null,r22,r31,r33);
+
+   r03.setPorts(r13,null,r02,null);
+   r13.setPorts(r23,r03,r12,null);
+   r23.setPorts(r33,r13,r22,null);
+   r33.setPorts(null,r23,r32,null); 
+   
+
+   
+   // Test 1: a router is the destination of its own generated packages:OK
+    r00!getPk(Pair(0,Pair(0,0)), W);
+
+   // Test 2: deadlock free between two neighbor routers which send packets to each other:OK
+   r00!getPk(Pair(0,Pair(1,0)), N);
+   r10!getPk(Pair(1,Pair(0,0)), S); 
+    
+   // Test 3: original Rebeca initial state:OK
+    /*r00!getPk(Pair(0,Pair(1,1)), N);
+    r00!getPk(Pair(1,Pair(1,1)), E);
+    r20!getPk(Pair(2,Pair(1,1)), N);
+    r20!getPk(Pair(3,Pair(1,1)), E);*/ 
+
+   // Test 4: stress test - many packets in the same port: OK
+  /*r00!getPk(Pair(0,Pair(2,1)), N);
+    r00!getPk(Pair(1,Pair(2,1)), N);
+    r00!getPk(Pair(2,Pair(2,1)), N);
+    r00!getPk(Pair(3,Pair(2,1)), N);
+    r00!getPk(Pair(4,Pair(2,1)), N);
+    r00!getPk(Pair(5,Pair(2,1)), N);
+    r00!getPk(Pair(6,Pair(2,1)), N);
+    r00!getPk(Pair(7,Pair(2,1)), N); */
+
+}
+
+
