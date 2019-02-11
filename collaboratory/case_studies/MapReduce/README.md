@@ -4,7 +4,7 @@ This ABS model implements variations on MapReduce, following the
 explanations in the [original paper](https://research.google.com/archive/mapreduce-osdi04.pdf).
 
 We show variations along three axes:
-- Algorithm (word count, word occurrence, reverse index)
+- Algorithm (word count, word occurrence, reverse prefix index)
 
   Note that, since there are no delta parameters of String type, the
   word to be searched is hardcoded as `"it"`.  (This is called
