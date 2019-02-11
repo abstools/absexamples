@@ -187,13 +187,15 @@ class Client(MapReduce m) {
                   list["it", "was", "the", "best", "of", "times",
                        "it", "was", "the", "worst", "of", "times"]),
              Pair("neuromancer.txt",
-                  list["the", "sky", "above", "the", "port", "was", "the", "color", 
-                       "of", "television", "tuned", "to", "a", "dead", "channel"])];
+                  list["the", "sky", "above", "the", "port", "was",
+                       "the", "color", "of", "television",
+                       "tuned", "to", "a", "dead", "channel"])];
     List<Pair<OutKeyType, List<OutValueType>>> result = Nil;
     Unit run() {
         Fut<List<Pair<OutKeyType, List<OutValueType>>>> f = m!mapReduce(inputs);
         await f?;
         result = f.get;
+        println(toString(result));
     }
 }
 
