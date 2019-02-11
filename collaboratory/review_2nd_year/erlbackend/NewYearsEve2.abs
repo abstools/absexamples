@@ -59,7 +59,7 @@ class Handset (Int interval, Int cyclelength, TelephoneServer ts, SMSServer smss
 	  } else {
           smss!sendSMS();
 	}
-	call = ~ call;
+	call = !call;
 	await duration(cyclelength,cyclelength);
 	this!normalBehavior();
       }
