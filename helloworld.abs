@@ -1,0 +1,16 @@
+module Hello;
+
+interface I {
+    Unit m();
+}
+
+class C implements I {
+    Unit m() {
+        println("Hello world!");
+    }
+}
+
+{
+    I o = new C();
+    await o!m();
+}
