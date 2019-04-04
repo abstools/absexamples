@@ -1,0 +1,22 @@
+module FizzBuzz;
+
+// A classic whiteboard programming exercise.
+//
+// - Print the numbers 1 to 100
+// - If the number is a multiple of 3, output fizz instead of the number
+// - If the number is a multiple of 5, output buzz instead of the number
+// - If the number is a multiple of 3 and 5, output fizzbuzz instead of the
+//   number
+
+{
+    Int number = 0;
+    while (number <= 100) {
+        case Pair(number % 3, number % 5) {
+            Pair(0, 0) => println("fizzbuzz");
+            Pair(0, _) => println("fizz");
+            Pair(_, 0) => println("buzz");
+            _ => println(toString(number));
+        }
+        number = number + 1;
+    }
+}
