@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Date and Time in ABS</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+  </head>
+  <body>
+    <h1>Date and Time in ABS</h1>
+    <div id="chart-container">
+    </div>
+  </body>
+  <script type="text/javascript">
+    'use strict';
+    function absolute_date(startdate, offset) {
+        let days = Math.floor(offset);
+        let time = offset - days;
+        let date = new Date(startdate);
+        date.setDate(date.getDate() + days);
+        date.setTime(date.getTime() + time * 24 * 60 * 60 * 1000);
+        return date.getTime(); // number of milliseconds, as needed by Highcharts
+    }
+
+    function drawChart(){
+        $.when(
+            $.getJSON("/call/Calendar/getStartDate"),
+            $.getJSON("/call/Calendar/getValues")
+        ).done(function(resstartdate, resvalues) {
+            let startdate = resstartdate[0].result;
+            let data = resvalues[0].result.map(p => [absolute_date(startdate, p.fst), p.snd]);
+            Highcharts.chart('chart-container', {
+                type: 'line',
+                title: { text: 'Dates and values from ABS' },
+                xAxis: { type: 'datetime' },
+                yAxis: { title: { text: 'Value (random number)' } },
+                series: [{
+                     name: 'random value', data: data
+                 }]
+            });
+        });
+    }
+
+    $(document).ready(function(){
+        drawChart();
+    });
+    
+  </script>
+</html>

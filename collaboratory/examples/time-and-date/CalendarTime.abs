@@ -1,0 +1,32 @@
+module CalendarTime;
+
+def String start_date() = "2020-04-01";
+
+interface Calendar {
+    [HTTPCallable] String getStartDate();
+    [HTTPCallable] List<Pair<Rat, Int>> getValues();
+
+    Unit addValue(Int value);
+}
+
+class Calendar implements Calendar {
+    List<Pair<Rat, Int>> values = list[];
+
+    String getStartDate() { return start_date(); }
+    List<Pair<Rat, Int>> getValues() { return reverse(values); }
+
+    Unit addValue(Int value) {
+        values = Cons(Pair(timeValue(now()), value), values);
+    }
+}
+
+{
+    [HTTPName: "Calendar"] Calendar c = new Calendar();
+    Int nRounds = 16;
+    while (nRounds > 0) {
+        c!addValue(random(50));
+        await duration(1/4, 1/4);
+        nRounds = nRounds - 1;
+    }
+    println(`Finished at $now()$`);
+}
