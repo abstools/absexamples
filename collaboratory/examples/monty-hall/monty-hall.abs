@@ -1,0 +1,74 @@
+module MontyHall;
+
+data Prize = Car | Goat;
+
+interface Host {
+    Int guess(Int door_guess);
+    Prize open(Int door);
+}
+
+class Host implements Host {
+    Int winning_door = random(3); // 0..2
+    List<Int> losing_doors = without(list[0, 1, 2], winning_door);
+    Int guess(Int door_guess) {
+        return (when door_guess == winning_door
+                then nth(losing_doors, random(2))
+                else head(without(losing_doors, door_guess)));
+    }
+    Prize open(Int door) {
+        return when door == winning_door then Car else Goat;
+    }
+}
+
+interface Contestant {
+    Unit play(Host host);
+    Unit printSummary();
+}
+
+class SwitchingContestant implements Contestant {
+    Int nPlays = 0;
+    Int nWins = 0;
+
+    Unit play(Host host) {
+        Int pick_door = random(3);
+        Int goat_door = await host!guess(pick_door);
+        Int final_door = head(without(without(list[0, 1, 2], pick_door), goat_door));
+        Prize prize = await host!open(final_door);
+        nPlays = nPlays + 1;
+        if (prize == Car) nWins = nWins + 1;
+    }
+    Unit printSummary() {
+        println(`I always switched, won $nWins$ out of $nPlays$ rounds.`);
+    }
+}
+
+class NonSwitchingContestant implements Contestant {
+    Int nPlays = 0;
+    Int nWins = 0;
+
+    Unit play(Host host) {
+        Int pick_door = random(3);
+        Int goat_door = await host!guess(pick_door);
+        Int final_door = pick_door;
+        Prize prize = await host!open(final_door);
+        nPlays = nPlays + 1;
+        if (prize == Car) nWins = nWins + 1;
+    }
+    Unit printSummary() {
+        println(`I never switched, won $nWins$ out of $nPlays$ rounds.`);
+    }
+}
+
+{
+    Int nRounds = 1000;
+    Contestant swc = new SwitchingContestant();
+    Contestant nsc = new NonSwitchingContestant();
+    while (nRounds > 0) {
+        nRounds = nRounds - 1;
+        Host host = new Host();
+        await swc!play(host);
+        await nsc!play(host);
+    }
+    swc.printSummary();
+    nsc.printSummary();
+}
