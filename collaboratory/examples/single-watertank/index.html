@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Watertank</title>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+  </head>
+  <body>
+    <h1>Watertank</h1>
+    <div id="chart-container">
+    </div>
+  </body>
+  <script type="text/javascript">
+    'use strict';
+    function drawChart() {
+        // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+        fetch("/call/watertank/getValveAndLevelHistory")
+            .then(response => response.json())
+            .then(data => {
+                let valvestatus = data.result.map(p => p.fst);
+                let waterlevel = data.result.map(p => p.snd);
+                Highcharts.chart('chart-container', {
+                    type: 'line',
+                    title: { text: 'Watertank' },
+                    series: [
+                        { name: 'valve status', data: valvestatus, step: 'right' },
+                        { name: 'water level', data: waterlevel }
+                    ]
+                });
+            });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        drawChart();
+    });
+  </script>
+</html>

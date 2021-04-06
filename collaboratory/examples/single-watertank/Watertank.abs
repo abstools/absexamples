@@ -1,0 +1,73 @@
+module SingleWaterTank;
+
+// For a description of the example scenario, see
+// https://projects.au.dk/fileadmin/D3.5_Examples_Compendium_2.pdf#page=9
+
+// Type `make help` for instructions on how to run the example.
+
+data ValveCommand = Open | Close;
+
+interface WaterTank {
+    Float getLevel();
+    Unit valvecontrol(ValveCommand command);
+    [HTTPCallable] List<Pair<Int, Float>> getValveAndLevelHistory();
+}
+
+interface Controller { }
+
+// A water tank that is filled with a constant flow `fillrate'.  When
+// the valve is open, it is drained with a speed proportional to the
+// current fill level by a factor `drainrate'.
+class WaterTank(Float fillrate, Float drainrate) implements WaterTank {
+    Float level = 0.0;
+    Bool valve_open = False;
+    List<Pair<Int, Float>> history = list[];
+
+    List<Pair<Int, Float>> getValveAndLevelHistory() { return reverse(history); }
+
+    Float getLevel() { return level; }
+    Unit valvecontrol(ValveCommand command) {
+        valve_open = command == Open;
+    }
+
+    Unit run() {
+        while (True) {
+            // Discrete-time simulation of water inflow and outflow
+            await duration(1, 1);
+            // The outflow is proportional to the current tank level
+            level = level + fillrate;
+            if (valve_open) {
+                level = max(0.0, level - drainrate * level);
+            }
+            history = Cons(Pair(when valve_open then 1 else 0, level), history);
+        }
+    }
+}
+
+// A tank controller that monitors the tank level, opening and closing
+// the drain valve as needed to maintain a safe current level in the
+// tank.
+class Controller(WaterTank tank, Float minlevel, Float maxlevel) implements Controller {
+    Unit run() {
+        while (True) {
+            Float level = await tank!getLevel();
+            if (level >= maxlevel) {
+                tank!valvecontrol(Open);
+            } else if (level <= minlevel) {
+                tank!valvecontrol(Close);
+            }
+            await duration(1, 1);
+        }
+    }
+}
+
+{
+    [HTTPName: "watertank"] WaterTank tank = new WaterTank(1.0, 0.2);
+    Controller controller = new Controller(tank, 5.0, 10.0);
+}
+
+
+// Local Variables:
+// abs-clock-limit: 100
+// abs-local-port: 8080
+// End:
