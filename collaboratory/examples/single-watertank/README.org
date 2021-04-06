@@ -1,9 +1,11 @@
 
 * The single water tank example for ABS
 
+See https://abs-models.org/documentation/examples/single-watertank/ for a discussion of this example.
+
 See
 https://projects.au.dk/fileadmin/D3.5_Examples_Compendium_2.pdf#page=9
 for a description of the scenario.
 
 Note that the custom visualization can currently only be used by
-running this example outside the collaboratory.
+running this example outside the collaboratory.  From a command line, run `make` in this directory to compile and start the model, then connect a browser to `http://localhost:8080/`.
