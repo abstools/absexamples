@@ -1,0 +1,13 @@
+module Example;
+
+interface Text {
+    [HTTPCallable] String getText();
+}
+
+class CText(String message) implements Text {
+    String getText() { return message; }
+}
+
+{
+    [HTTPName: "text"] Text t = new CText("This is the message");
+}

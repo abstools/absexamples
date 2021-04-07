@@ -1,0 +1,162 @@
+/* Example: ABS model of the New Years Eve case study,
+   adapted for the ERLANG backend
+   Written by: Einar Broch Johnsen, Rudi Schlatte, S. Lizeth Tapia Tarifa
+----
+   See paper:
+   Einar Broch Johnsen, Olaf Owe, Rudolf Schlatte, and S. Lizeth Tapia Tarifa
+   Dynamic Resource Reallocation Between Deployment Components
+   Proc. Intl. Conf. on Formal Engineering Methods (ICFEM 2010). LNCS 6447. Springer 2010.
+*/
+
+module Example;
+import * from ABS.DC;
+
+interface Balancer  {
+  Unit requestdc(DC comp);
+  Unit setPartner(Balancer p);
+}
+
+interface TelephoneServer  {
+  Unit call(Int calltime);
+}
+
+interface SMSServer {
+  Unit sendSMS();
+}
+
+class TelephoneServer implements TelephoneServer  {
+  Int callcount = 0;
+  Unit call(Int calltime){
+    while (calltime > 0) {
+      // println("[Time: "+toString(timeValue(now()))+"] Tel server received call");
+      [Cost: 1] calltime = calltime - 1;
+      await duration(1, 1);
+    }
+    callcount = callcount + 1;
+  }
+}
+
+class SMSServer implements SMSServer  {
+  Int smscount = 0;
+  Unit sendSMS() {
+    // println("[Time: "+toString(timeValue(now()))+"] SMS server received sms");
+    [Cost: 1] smscount = smscount + 1;
+  }
+}
+
+def Bool isMidnightWindow(Int interval) =
+  let Rat curr = timeValue(now())%interval
+  in curr > 50 && curr < 70;
+
+class Handset (Int interval, Int cyclelength, TelephoneServer ts, SMSServer smss) {
+  Bool call = False;
+  Rat curr = 0;
+
+  Unit run(){
+    println("[Time: "+toString(timeValue(now()))+"] Running handset");
+    while (timeValue(now()) < 250) {
+      if (isMidnightWindow(interval)) {
+        // midnight
+        Int i = 0;
+        while (i < 10) {
+          smss!sendSMS();
+          i = i + 1;
+        }
+        await duration(1,1);
+      } else {
+        // normal
+        if (call) {
+          await ts!call(1);
+        } else {
+          smss!sendSMS();
+        }
+        call = !call;
+        await duration(cyclelength,cyclelength);
+      }
+    }
+  }
+}
+
+class Balancer(String name, Rat minimum) implements Balancer {
+  Balancer partner = null;
+  Rat ld = 100;
+
+  Unit run() {
+    await partner != null;
+    while (timeValue(now()) < 250) {
+      await duration(1, 1);
+      ld = await thisDC()!load(Speed, 1);
+      println("[Time: "+toString(timeValue(now()))+"] Balancer "+name+" has current load "+toString(ld)+"%");
+      if (ld > 90) {
+	println("[Time: "+toString(timeValue(now()))+"] Balancer "+name+" needs more resources!");
+        await partner!requestdc(thisDC());
+      }
+    }
+  }
+
+  Unit requestdc(DC comp) {
+    InfRat total = await thisDC()!total(Speed);
+    Rat ld = await thisDC()!load(Speed, 1);
+      // we know total will not be InfRat
+    Rat requested = finvalue(total) / 3;
+    if (ld < 50 && (finvalue(total)-requested>minimum)) {
+      thisDC()!transfer(comp, requested, Speed);
+    } else {
+    println("[Time: "+toString(timeValue(now()))+"] Balancer " + name + " No resources available!!");
+  }
+  }
+
+  Unit setPartner(Balancer p) {
+    println("[Time: "+toString(timeValue(now()))+"] "+name+" received partner");
+    partner = p;
+  }
+}
+
+{ // Main block:
+  // Time limit for simulations in Erlang:
+  Rat stop = 1000;
+  Rat minimum = 15;
+
+  DC smscomp = new DeploymentComponent("smscomp", map[Pair(Speed, 80)]);
+  DC telcomp = new DeploymentComponent("telcomp", map[Pair(Speed, 80)]);
+  println("starting servers");
+  [DC: smscomp] SMSServer sms = new SMSServer();
+  [DC: telcomp] TelephoneServer tel = new TelephoneServer();
+  /*
+  println("starting balansers");
+  [DC: smscomp] Balancer smsb = new Balancer("smsb",minimum);
+  [DC: telcomp] Balancer telb = new Balancer("telb",minimum);
+  await smsb!setPartner(telb);
+  await telb!setPartner(smsb);
+  */
+  println("starting handsets");
+  new Handset(100,1,tel,sms);
+  new Handset(100,1,tel,sms);
+  new Handset(100,1,tel,sms);
+  new Handset(100,1,tel,sms);
+  new Handset(100,1,tel,sms);
+  new Handset(100,1,tel,sms);
+  new Handset(100,1,tel,sms);
+  new Handset(100,1,tel,sms);
+  new Handset(100,1,tel,sms);
+  new Handset(100,1,tel,sms);
+  // await duration(1, 1);         // Don't start all at the same time
+  // new Handset(100,1,tel,sms);
+  // new Handset(100,1,tel,sms);
+  // new Handset(100,1,tel,sms);
+  // new Handset(100,1,tel,sms);
+  // new Handset(100,1,tel,sms);
+  // new Handset(100,1,tel,sms);
+  // new Handset(100,1,tel,sms);
+  // new Handset(100,1,tel,sms);
+  // new Handset(100,1,tel,sms);
+  // new Handset(100,1,tel,sms);
+}
+
+
+// Local Variables:
+// abs-indent: 2
+// abs-target-language: erlang
+// abs-clock-limit: 250
+// abs-local-port: 8080
+// End:

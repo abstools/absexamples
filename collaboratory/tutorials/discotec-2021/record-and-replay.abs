@@ -1,0 +1,15 @@
+module Example;
+interface Printer {
+    Unit printMessage(String message);
+}
+class CPrinter implements Printer {
+    Unit printMessage(String message) {
+        println(`The message is: $message$`);
+    }
+}
+{
+    Printer printer = new CPrinter();
+    foreach (m in list["Hello", "Hola", "Hallo", "Hei"]) {
+        printer!printMessage(m);
+    }
+}

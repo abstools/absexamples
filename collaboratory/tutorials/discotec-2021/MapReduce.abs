@@ -1,0 +1,159 @@
+module MapReduce;
+import * from ABS.DC;
+
+// We arbitrarily choose to implement word count in the basic model.
+
+// Note we use lists where the paper says "set" since the authors mean
+// multisets in many cases, especially in the reduce phase.
+interface IMap {
+  // invoked by MapReduce component
+  List<Pair<String, Int>> invokeMap(String key, List<String> value);
+}
+
+interface IReduce {
+  // invoked by MapReduce component
+  List<Int> invokeReduce(String key, List<Int> value);
+}
+
+interface Worker extends IMap, IReduce { }
+
+interface MapReduce {
+  // invoked by client
+  List<Pair<String, List<Int>>> mapReduce(List<Pair<String, List<String>>> documents);
+  // invoked by workers
+  Unit finished(Worker w);
+}
+
+class Worker(MapReduce coordinator) implements Worker {
+  List<Pair<String, Int>> mapResults = Nil;
+  List<Int> reduceResults = Nil;
+
+  Unit map(String key, List<String> value) {
+    List<String> wordlist = value;
+    foreach (word in wordlist) {
+      [Cost: 10] mapResults = Cons(Pair(word, 1), mapResults);
+    }
+  }
+  Unit reduce(String key, List<Int> value) {
+    List<Int> numlist = value;
+    Int result = foldl((Int val, Int acc) => val + acc)(numlist, 0);
+    [Cost: 10] reduceResults = Cons(result, reduceResults);
+  }
+
+  List<Pair<String, Int>> invokeMap(String key, List<String> value) {
+    mapResults = Nil;
+    this.map(key, value);
+    coordinator!finished(this);
+    List<Pair<String, Int>> result = mapResults;
+    mapResults = Nil;
+    return result;
+  }
+
+  List<Int> invokeReduce(String key, List<Int> value) {
+    reduceResults = Nil;
+    this.reduce(key, value);
+    coordinator!finished(this);
+    List<Int> result = reduceResults;
+    reduceResults = Nil;
+    return result;
+  }
+}
+
+class MapReduce implements MapReduce {
+  Set<Worker> workers = set[];
+  Int nWorkers = 0;
+
+  List<Pair<String, List<Int>>> mapReduce(List<Pair<String, List<String>>> items) {
+    Set<Fut<List<Pair<String, Int>>>> fMapResults = set[];
+    ABS.StdLib.Map<String, List<Int>> intermediates = map[];
+    Set<Pair<String, Fut<List<Int>>>> fReduceResults = set[];
+    List<Pair<String, List<Int>>> result = Nil;
+
+    foreach (item in items) {
+      Worker w = this.getWorker();
+      String key = fst(item);
+      List<String> value = snd(item);
+      // "Map, written by the user, takes an input pair and produces a
+      // set of intermediate key/value pairs." [MapReduce, pg. 2]
+      Fut<List<Pair<String, Int>>> fMap = w!invokeMap(key, value);
+      fMapResults = insertElement(fMapResults, fMap);
+    }
+    foreach (fMapResult in elements(fMapResults)) {
+      // "The MapReduce library groups together all intermediate values
+      // associated with the same intermediate key I ..." [ditto]
+      await fMapResult?;
+      List<Pair<String, Int>> mapResult = fMapResult.get;
+      foreach (keyValuePair in mapResult) {
+        List<Int> inter = lookupDefault(intermediates, fst(keyValuePair), Nil);
+        intermediates = put(intermediates, fst(keyValuePair),
+          Cons(snd(keyValuePair), inter));
+      }
+    }
+    // "... and passes them to the Reduce function.  The Reduce
+    // function, also written by the user, accepts an intermediate key I
+    // and a set of values for that key. It merges together these values
+    // to form a possibly smaller set of values.  Typically just zero or
+    // one outpout value is produced per Reduce invocation." [ditto]
+    foreach (key in elements(keys(intermediates))) {
+      List<Int> values = lookupUnsafe(intermediates, key);
+      Worker w = this.getWorker();
+      Fut<List<Int>> fReduce = w!invokeReduce(key, values);
+      fReduceResults = insertElement(fReduceResults, Pair(key, fReduce));
+    }
+    foreach (reduceResult in elements(fReduceResults)) {
+      String key = fst(reduceResult);
+      Fut<List<Int>> fValues = snd(reduceResult);
+      await fValues?;
+      List<Int> values = fValues.get;
+      result = Cons(Pair(key, values), result);
+    }
+    return result;
+  }
+
+  Worker getWorker() {
+    Int capacity = 20;
+    Int maxWorkers = 5;
+    if (emptySet(workers) && nWorkers < maxWorkers) {
+      nWorkers = nWorkers + 1;
+      DeploymentComponent dc = new DeploymentComponent(`worker $nWorkers$`, map[Pair(Speed, capacity)]);
+      [DC: dc] Worker w = new Worker(this);
+      workers = insertElement(workers, w);
+    }
+    await size(workers) > 0;
+    Worker w = take(workers);
+    workers = remove(workers, w);
+    return w;
+  }
+  Unit finished(Worker w) {
+    workers = insertElement(workers, w);
+  }
+}
+
+
+// Environment
+class Client(MapReduce m) {
+  List<Pair<String, List<String>>> inputs =
+    list[Pair("paul_clifford.txt",
+          list["it", "was", "a", "dark", "and", "stormy", "night"]),
+      Pair("tale_of_two_cities.txt",
+        list["it", "was", "the", "best", "of", "times",
+          "it", "was", "the", "worst", "of", "times"]),
+      Pair("neuromancer.txt",
+        list["the", "sky", "above", "the", "port", "was", "the", "color", 
+          "of", "television", "tuned", "to", "a", "dead", "channel"])];
+  List<Pair<String, List<Int>>> result = Nil;
+  Unit run() {
+    println(`Input data: $inputs$`);
+    result = await m!mapReduce(inputs);
+    println(`Result: $result$`);
+  }
+}
+
+{
+  MapReduce m = new MapReduce();
+  new local Client(m);
+}
+
+// Local Variables:
+// abs-indent: 2
+// End:

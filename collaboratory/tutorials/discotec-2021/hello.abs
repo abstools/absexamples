@@ -1,0 +1,15 @@
+module Hello;
+interface Hello {
+    Unit printMessage();
+}
+class HelloC(String name) implements Hello {
+    Unit printMessage() {
+        println(`Hello $name$!`);
+    }
+}
+{
+    Hello hello = new HelloC("world");
+    Fut<Unit> f = hello!printMessage();
+    await f?;
+    println("Main block finished.");
+}
