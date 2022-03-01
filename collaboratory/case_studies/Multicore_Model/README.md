@@ -3,7 +3,7 @@
 A multicore memory system consists of cores that contain tasks to be executed,
 the data layout in main memory (indicating where data is allocated), and a
 system architecture consisting of cores with private multi-level caches and
-shared memory. See ![Figure cores.pdf](./cores.pdf). Such a system is parametric
+shared memory. See ![Figure cores.png](./cores.png). Such a system is parametric
 in the number of cores, the number and size of caches, and the associativity
 and replacement policy.  Data is organised in blocks that move between the
 caches and the main memory.  For simplicity, we abstract from the data content
@@ -29,7 +29,7 @@ memory block. The latter invalidates other copies of the same block in other
 caches to provide write access.
 
 This use-case contains a distributed implementation of this model in ABS. See
-![Figure initialConfiguration.pdf](./initialConfiguration.pdf). A transition
+![Figure initialConfiguration.png](./initialConfiguration.png). A transition
 system specification of this model can be found at
 https://doi.org/10.1016/j.scico.2019.04.003
 
