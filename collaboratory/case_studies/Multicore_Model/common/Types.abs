@@ -1,0 +1,110 @@
+// ALL DATATYPES, TYPE-SYNONYMS and INTERFACES used by the simulation
+module Types;
+
+export *;
+
+// Source-level statements
+data Rst = Read(Ref) | ReadBl(Ref)
+    | Write(Ref) | WriteBl(Ref)
+         | Commit(Ref)
+         | Spawn(RstList)
+         | Choice(RstList,RstList)
+         | CommitAll
+         | Loop(RstList,Int); // NOTE: should be bounded by a (strictly positive) integer, if you want unbounded loop you can use Loop(RstList, 0)
+
+// Sequential composition
+type RstList = List<Rst>;
+
+// The physical main-memory address of any program's date, starting from the beginning of a block
+type Address = Int;
+// The offset to walk from the block's starting address to find the exact data
+type Offset = Int;
+
+// an exact reference of any program's data is the pair of its main-memory block and the offset from inside that block
+type Ref = Pair<Address, Offset>;
+
+// extracting the block-address from a exact reference
+def Address addr(Ref r) = fst(r);
+
+// for the cache coherence protocol (MSI)
+data Status = Sh | Mo | In;
+
+// two isomorphic representations of memory contents (both used for caches and dram memory)
+type MemMap = Map<Address,Status>;
+type MemList = List<Pair<Address,Status>>;
+
+interface IBarrier {
+  // a general barrier implementation
+  // calling synchronize() will block the caller until all the participants have entered the barrier
+  Unit synchronise();
+}
+
+interface ICache {
+    // from a core to a cache
+  Int getPenalties();
+  Maybe<Status> getStatus(Address n);
+//  Bool setStatus(Address n, Status st);
+  Bool remove_inv(Address n);
+  Unit commit(Ref r);
+  Unit commitAll();
+  Bool broadcastX(Ref r);
+
+  // from a cache level to a cache level
+  Unit fetch(Address n);
+  Unit flush(Address n);
+  Unit flushAll();
+  Maybe<Status> swap(Address n_out, Pair<Address,Status> m_in);
+
+  // from bus to cache
+  Unit receiveRd(Address n,IBarrier start,IBarrier end);
+  Unit receiveRdX(Address n,IBarrier start,IBarrier end);
+  Unit printCache();
+
+  // intialize with local caches
+   Unit setMyCaches(List<ICache> l);
+}
+
+
+// And now, we define the bus itself
+interface IBus {
+  Unit lock();
+  Unit release();
+  Unit sendRd(List<ICache> localCaches, Address n);
+  Unit sendRdX(List<ICache> localCaches, Address n);
+  // FOR INITIALIZATION-ONLY: chicken-egg problem of object creation. we first create the bus, then all the caches, then we update the bus with only the created caches
+  Unit connectCaches(List<ICache> cachesC);
+}
+
+
+interface ICore {
+  // for statistics, prints cache hits and misses
+  Unit printCore();
+}
+
+interface IScheduler {
+  // core is idling and so requests a task-to-execute from the OS scheduler
+  RstList getTask();
+  // core appends a new task to the OS scheduler (e.g. spawn/fork)
+  Unit putTask(RstList t);
+  List<RstList> getQueue();
+  // the simulator's main thread blocks until the scheduler completes.
+  // Completion means that both hold:
+  // 1. there are no more programs (tasks) to execute in the scheduler queue
+  // 2. all cores are done (idling) and waiting for a new task.
+  Unit done();
+}
+
+interface IMemory {
+  Status getStatus(Address n);
+  Unit setStatus(Address n, Status st);
+
+  MemMap getMemory();
+  Unit printMemory();
+}
+
+
+//***********************************************************************
+//***********************CLASS FOR INITIALIZING AND SETTING UP THE WHOLE SIMULATED SYSTEM ********************
+interface ISystem{
+  Unit runSystem(Int nCores, Int nlevel, Int l1Size , Int maxMem,  RstList rst);
+}

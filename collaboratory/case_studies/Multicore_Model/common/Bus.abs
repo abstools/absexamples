@@ -1,0 +1,61 @@
+// The communication bus so that the caches of different cores can communicate with each other.
+module Bus;
+
+export *;
+
+import * from Types;
+import * from Barrier;
+
+def List<A> listminus<A>(List<A> list1, List<A> list2) =
+    case list2 {
+    Nil => list1
+    | Cons(hd,tl) => listminus(without(list1,hd), tl)
+};
+
+//***********************IMPLEMENTATION OF THE BUS ********************************
+
+class Bus(IMemory mainMemory) implements IBus {
+  Bool unlocked = True; // A simple lock on the bus, initially open
+  List<ICache> caches = Nil;
+  Int nbrOfCaches = 0;
+
+  Unit lock(){
+    await unlocked;
+    unlocked = False;
+  }
+  Unit release(){
+    unlocked = True;
+  }
+  // Called at initialization time to connect caches to the Bus
+
+  Unit connectCaches(List<ICache> cachesC) {
+      this.caches = concatenate(cachesC, this.caches);
+      this.nbrOfCaches = this.nbrOfCaches + length(cachesC);
+  }
+
+  Unit sendRd(List<ICache> localCaches, Address n) {
+      List<ICache> mycaches = this.caches;
+      // Do not broadcast to sender's caches
+      mycaches = listminus(caches, localCaches);
+      Int nmbOfCaches = nbrOfCaches - length(localCaches);
+      IBarrier startbarrier = new Barrier(nmbOfCaches);
+      IBarrier endbarrier = new Barrier(nmbOfCaches+1); // BUS also participates in the end barrier.
+      foreach (cache in mycaches) { cache ! receiveRd(n,startbarrier,endbarrier); }
+      endbarrier.synchronise();
+  }
+
+  Unit sendRdX(List<ICache> localCaches, Address n) {
+      List<ICache> mycaches = this.caches;
+      mainMemory.setStatus(n,In);
+      Status s = mainMemory.getStatus(n);
+      assert (s==In);
+      // Do not broadcast to sender's caches
+      mycaches = listminus(caches, localCaches);
+      Int nmbOfCaches = nbrOfCaches - length(localCaches);
+      IBarrier startbarrier = new Barrier(nmbOfCaches);
+      IBarrier endbarrier = new Barrier(nmbOfCaches+1); // BUS also participates in the end barrier.
+      foreach (cache in mycaches) { cache ! receiveRdX(n,startbarrier,endbarrier); }
+      endbarrier.synchronise();
+  }
+
+}

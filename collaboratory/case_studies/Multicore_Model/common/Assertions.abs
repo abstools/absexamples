@@ -1,0 +1,19 @@
+// Assertions used throughout the simulation to check the validity of the state (scheduler,memory)
+module Assertions;
+
+export *;
+
+import * from Types;
+
+//***********************FUNCTIONS FOR ASSERTIONS********************
+def Bool checkAllSharedInMemory(MemMap m) =
+  let (List<Status> l) = values(m) in checkAllSharedInMemory_(l);
+
+def Bool checkAllSharedInMemory_(List<Status> l) =
+  case l {
+    Cons(Sh,t) => checkAllSharedInMemory_(t);
+    Cons(_,_) => False;
+    Nil => True;
+  };
+
+def Bool checkEmtpySchedulerQueue(List<RstList> l) = (l == Nil);

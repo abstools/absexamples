@@ -1,0 +1,91 @@
+// A simulated CPU processor is an instance of the Core class.
+module Core;
+
+export *;
+
+import * from Types;
+
+//***********************IMPLEMENTATION OF A CORE ********************************
+
+class Core(String name, IScheduler sched, ICache l1, Int nbrOfCaches) implements ICore {
+    RstList currentTask = Nil;
+    Maybe<Status>  status = Nothing;
+    Bool removed = False;
+
+    Unit printCore() {
+	     println(name+" has finished");
+	//await l1!printCache();
+    }
+
+
+    // the run method is recursive and will execute the statements in the current task one by one
+    Unit run() {
+	[Cost:1] skip;
+	switch (currentTask) {
+	    Nil => currentTask = sched.getTask();
+	    Cons(rst, rest) =>
+	       switch (rst) {
+		         CommitAll => {
+			            l1.commitAll();
+			            currentTask = rest;
+		          }
+		          Read(r) => {
+                  removed = l1.remove_inv(addr(r));
+			            if (removed){
+				              l1!fetch(addr(r));
+				              currentTask = Cons(ReadBl(r),rest);
+			             }
+                   else {
+			                  currentTask = rest;
+		   	           }
+		          }
+		          ReadBl(r) => {
+			             status = l1.getStatus(addr(r));
+			             if (status != Nothing) currentTask = Cons(Read(r),rest);
+		          }
+		          Write(r) => {
+			             status = l1.getStatus(addr(r));
+			             switch (status) {
+			                  Just(Mo) => {
+				                      currentTask = rest;
+			                   }
+			                   Just(Sh) => {
+				                       Bool res = l1.broadcastX(r);
+				                       if (res) {
+				                             currentTask = rest;
+				                       }
+			                    }
+			                   _ => {
+				                       Bool removed = l1.remove_inv(addr(r));
+				                       if (removed){
+				                             l1!fetch(addr(r));
+				                             currentTask = Cons(WriteBl(r),rest);
+				                       }
+			                   }
+			             }
+		       }
+		       WriteBl(r) => {
+			          Maybe<Status>  status = l1.getStatus(addr(r));
+			          if (status != Nothing) currentTask = Cons(Write(r),rest);
+		       }
+			     Spawn(rstList) => {
+			          sched.putTask(rstList);
+			          currentTask = rest;
+		       }
+		       Commit(r) => {
+			          l1.commit(r);
+			          currentTask = rest;
+		       }
+		       Choice(s1,s2) => {
+			          Int r = random(2);
+			          currentTask=concatenate(when r==0 then s1 else s2, rest);
+		       }
+		       Loop(rstList, 1) => currentTask=concatenate(rstList, rest);
+		       Loop(rstList, n) => currentTask=concatenate(rstList, Cons(Loop(rstList,n-1),rest));
+		    // you can use Loop(rstList, 0) for an infinite loop
+		    }
+
+      }
+	   this ! run();
+   }
+}

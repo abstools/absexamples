@@ -1,0 +1,38 @@
+// A simple "OS" scheduler to distribute pending (FIFO queued) tasks to available (idle) cores
+module Scheduler;
+
+export *;
+
+import * from Types;
+
+//***********************IMPLEMENTATION OF A GLOBAL SCHEDULER ********************************
+
+// this is an implementation of a FIFO shceduler
+// OPT: use deque datastructure
+class FIFOScheduler(Int cores) implements IScheduler {
+  List<RstList> q = Nil; // a queue of pending tasks
+  Int counter = cores; // a counter of active/running cores
+
+  // from ABS' <main> procedure to the scheduler, to make <main> wait until the scheduler has finished.
+  Unit done() {
+    await counter==0 && q==Nil;
+  }
+
+  // from core to the scheduler
+  RstList getTask() {
+    counter=counter-1;
+    await q != Nil;
+    counter=counter+1;
+    RstList result = appendright(head(q),CommitAll);
+    q = tail(q);
+    return result;
+  }
+  // from core to the scheduler
+  Unit putTask(RstList newTask) {
+    q = appendright(q,newTask);
+  }
+
+  // used only for debugging purposes
+  List<RstList> getQueue(){return q;}
+
+}

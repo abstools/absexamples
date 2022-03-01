@@ -1,0 +1,267 @@
+// Each particular cache sitting on a level, is an instance of the Cache class.
+// Each cache can communicate directly with its next-level cache (if there is one) and the global system bus.
+// This is the eager variation, where more synchronization points are made with the bus.
+module Cache;
+
+export *;
+
+import * from Types;
+import * from Utils;
+
+def Maybe<Pair<Address,Status>> retrieve(MemList memList, Status desiredStatus) =
+    case memList {
+    Cons(Pair(n,desiredStatus),_) => Just(Pair(n,desiredStatus));
+    Cons(_,memList_) => retrieve(memList_,desiredStatus);
+    Nil => Nothing;
+};
+
+
+/*
+* Given a cache, this function selects a cache line to be evicted/swapped.
+* This current implementation returns the first element in the map to be
+* evicted/swapped when there is no more space in the cache
+* If there is space it returns nothing.
+* Note that this is capturing the behaviour of a fully associative cache.
+*/
+
+  def Pair<Address, Status> select(MemMap cache, Int cacheCapacity, Address n) =
+      when size(keys(cache)) < cacheCapacity
+      then Pair(n,lookupDefault(cache,n,In))
+      else let (List<Pair<Address,Status>> ls) = mapToList(cache) in
+  	     case retrieve(ls,In) {
+  	       Nothing =>
+            case retrieve(ls,Sh) {
+  	           Nothing =>
+                  case retrieve(ls,Mo){
+                    Nothing => Pair(n,lookupDefault(cache,n,In));
+                    m => fromJust(m);
+                  };
+  	           s => fromJust(s);
+  	          };
+  	       i => fromJust(i);
+  	};
+
+// currentLevel = 1, 2, 3, .... for L1,L2,L3,....
+class Cache(IBus bus, IMemory mainMemory, Maybe<ICache> nextLevel, Int maxSize, Int currentLevel, Int nbrOfCaches) implements ICache {
+    MemMap cacheMemory = map[];
+    List<ICache> myCaches = list[];
+
+    Map<Address, Bool> flushing = map[];
+
+    Unit printCache() {
+	switch (nextLevel) {
+	    Nothing => mainMemory.printMemory();
+	    Just(lNext) => await lNext!printCache();
+	}
+    }
+
+    // we keep this method since it is in the interface
+    Int getPenalties() { return 0;}
+
+    // initialize with local caches
+    Unit setMyCaches(List<ICache> l) { myCaches = l; }
+
+
+    Maybe<Status> swap(Address n_out, Pair<Address,Status> m_in) {
+      Maybe<Status> tmp = Nothing;
+        switch (lookup(cacheMemory,n_out)) {
+          Nothing => skip;
+          Just(In) =>skip;
+          _ => {
+            tmp = lookup(cacheMemory,n_out);
+            cacheMemory = removeKey(cacheMemory,n_out);
+            if (fst(m_in)!=n_out) {
+              cacheMemory = put(cacheMemory, fst(m_in), snd(m_in));
+            }
+          }
+        }
+        return tmp;
+      }
+
+
+    Maybe<Status> getStatus(Address n) { return lookup(cacheMemory,n);}
+
+    Bool remove_inv(Address n){
+	Bool answer = False;
+	switch (lookup(cacheMemory,n)) {
+	    Nothing => {cacheMemory = removeKey(cacheMemory,n); answer = True;}
+	    Just(In) =>{cacheMemory = removeKey(cacheMemory,n); answer = True;}
+	    _ => { skip; }
+	}
+	return answer;
+    }
+
+    Bool setStatus(Address n, Status st){
+	Bool answer = False;
+	switch (lookup(cacheMemory,n)) {
+	    Nothing => skip;
+	    Just(In) =>skip;
+	    _ => {
+		cacheMemory = put(cacheMemory,n,st);
+		answer = True;
+	    }
+	}
+	return answer;
+    }
+
+    // from core to cache
+    Unit commit(Ref r) {
+      this!flush(addr(r));
+    }
+
+    // from core to cache
+    Unit commitAll() { this!flushAll(); }
+
+    Unit fetch(Address n){
+      // this cache does not have n
+      switch (nextLevel) {
+        // we have the lock at the bus
+        // if the block is fetched from the next level cache,
+        // it might require swapping if the cache memory is full
+        Just(nextCache) => {
+          Bool removed = nextCache.remove_inv(n);
+          if (removed){
+            nextCache!fetch(n);
+            this!fetchBl(n);
+          }
+          else {
+            // for the case where the next cache has n
+            Pair<Address,Status> selected = select(cacheMemory, maxSize, n);
+            Maybe<Status> s = nextCache.swap(n,selected);
+            if (s != Nothing) { // swap succeeds
+              if (fst(selected)!=n){
+                cacheMemory = removeKey(cacheMemory,fst(selected));
+              }
+              cacheMemory = put(cacheMemory, n,fromJust(s));
+            }
+            else   this!fetch(n);  // swap fails
+          }
+        }
+        _ => {
+          // we are in last level cache and we don't have n
+          this.broadcast(n);
+          this!fetchBl(n); //  fetchBl for last level cache
+        }
+      }
+    }
+
+  Unit broadcast(Address n){
+    await bus!lock();
+    bus.sendRd(myCaches, n);
+    bus.release();
+  }
+
+Unit fetchBl(Address n){
+	switch (nextLevel) {
+    Just(nextCache) => {
+	      Maybe<Status>  status = nextCache.getStatus(n); // assert
+	      if (status == Nothing){ this!fetchBl(n); }	else { this!fetch(n); }
+      }
+      _ => {// we are in last level cache and we don't have n
+        Pair<Address,Status> selected = select(cacheMemory, maxSize, n); // gives us address to remove
+          if (fst(selected)==n){ // Fetch1
+    		     Status status = mainMemory.getStatus(n);
+    		     cacheMemory = put(cacheMemory,n,status);
+    	    }
+          else {
+             switch (selected) {
+    	            Pair(selected_n,Mo) => { // Fetch3
+    		              this!flush(selected_n);
+    		              this!fetchW(n,selected_n);}
+    	            Pair(selected_n,_) =>  { // Fetch2
+    		              Status status = mainMemory.getStatus(n);
+    		              cacheMemory = removeKey(cacheMemory,selected_n);
+    		              cacheMemory = put(cacheMemory,n,status);}
+               }
+          }
+         }
+       }
+     }
+
+/*  Unit fetchW(Address n,Address n_){ // Fetch4
+    if (lookupDefault(cacheMemory,n_, In)!=Mo) this!fetchBl(n);
+    else this!fetchW(n,n_);
+  }*/
+
+  Unit fetchW(Address n,Address n_){
+    await (lookupDefault(cacheMemory,n_, In)!=Mo); // FetchW;
+    this!fetchBl(n);
+  }
+
+  Bool broadcastX(Ref r) {
+      Bool res = False;
+      await bus!lock();
+      if (lookup(cacheMemory,addr(r)) ==Just(Sh)){
+	  bus.sendRdX(myCaches, addr(r));
+	  cacheMemory = put(cacheMemory,addr(r),Mo);
+	  res = True;
+      }
+      bus.release();
+      return res;
+  }
+
+
+
+    // from cache to cache
+    Unit flush(Address n) {
+      flushing = put(flushing,n ,False);
+	switch (lookup(cacheMemory,n)) {
+	    // if the cache line is not found in the cache, the cache
+	    // forwards the flush to the next level.  This is because we
+	    // are implementing a cache exclusive multilevel architecture
+	    Nothing => switch (nextLevel) {
+		Just(nextCache) => { await nextCache!flush(n); } // I think we also don't need await here
+		_ => skip;
+	    }
+	    // if the cache line is in the cache and it is modified,
+	    // then it flushes directly to the main memory (independent of
+	    // the level)
+	    Just(Mo) => {
+		mainMemory.setStatus(n,Sh);
+		cacheMemory = put(cacheMemory,n,Sh);
+	    }
+	    // invalid or shared, we do not have to propagate
+	    _ => skip;
+	}
+    }
+
+    Unit flushAll() {
+	foreach (n_ in elements(keys(cacheMemory))) {
+	    if (lookup(cacheMemory,n_) == Just(Mo)) {
+         this!flush(n_);
+      }
+	}
+	if (nextLevel != Nothing) {
+	    //await fromJust(nextLevel)!flushAll(); // Do we need await here?
+      fromJust(nextLevel)!flushAll();
+	}
+    }
+
+    Unit receiveRd(Address n,IBarrier start,IBarrier end) {
+	// start synchronization
+	await start!synchronise();
+	switch (lookup(cacheMemory,n)) {
+	    Just(Mo) => {
+		this!flush(n);
+	    }
+	    _ => skip;
+	}
+	// end synchronization
+	end!synchronise();
+    }
+
+    Unit receiveRdX(Address n,IBarrier start,IBarrier end) {
+	// start synchronization
+	await start!synchronise();
+	Status s = mainMemory.getStatus(n);
+	assert (s==In);
+	switch (lookup(cacheMemory,n)) {
+	    Just(Sh) => {cacheMemory = put(cacheMemory,n,In);}
+	    Just(Mo) => println("ERROR (in address " + toString(n) +"): cache coherence protocol is not working correctly");
+	    _ => skip;
+	}
+	// end synchronization
+	end!synchronise();
+    }
+
+}

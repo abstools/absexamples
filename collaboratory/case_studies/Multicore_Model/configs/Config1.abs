@@ -1,0 +1,62 @@
+module Config1;
+
+import * from Types;
+import * from System;
+
+
+// This function creates the initial MAIN TASK placed on the scheduler, with nTasks_ of szTask
+// by interleaving between a read and a write
+// here we are generating one access read/write per memory block
+// all the generated tasks do not share any block during execution.
+
+def RstList createMain(Int szTask, Int nTasks) = createMain_(szTask, nTasks, 1);
+
+def RstList createMain_(Int szTask, Int nTasks, Int rCounter) =
+  when nTasks==0
+  then Nil
+  else Cons(Spawn(createMain__(szTask, rCounter)), createMain_(szTask,nTasks-1,rCounter+szTask));
+
+
+def RstList createMain__(Int szTask, Int rCounter) =
+  when szTask<=0
+  then Nil
+  else when szTask == 1
+       then Cons(Read(Pair(rCounter,1)), Nil)
+       else Cons(Read(Pair(rCounter,1)), Cons(Write(Pair(rCounter+1,1)), createMain__(szTask-2,rCounter+2)));
+
+
+//***********************MAIN BLOCK ********************************
+{
+
+  // number of cores
+  Int nCores = 4;
+
+  //number of tasks
+  Int nTasks = 10;
+
+  // println("Cores: "+toString(nCores) +", Tasks: "+toString(nTasks));
+
+  // size of each task
+  Int sizeTasks = 100;
+
+  // number of caches per core
+  Int nLevels =3;
+  // size of the l1 cache.
+  Int l1Size = 10;
+
+  // the other caches' sizes are a multiple of 10
+  // e.g., if l1 = 10 then l2 = 20 and l3 = 30
+
+  // size of the main memory
+  Int memo = 3*nTasks*sizeTasks+10;
+
+  // CREATE THE MAIN PROGRAM TO BE SIMULATED for its cache performance
+  RstList rst = createMain(sizeTasks, nTasks);
+
+  // this is an object that creates configurations and tasks, the parameter indicates the resources per DC
+  ISystem system = new local System(Just(1));
+
+  // this method simulates the system until the end of its simulation
+  system.runSystem(nCores, nLevels, l1Size, memo,  rst);
+
+}

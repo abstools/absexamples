@@ -1,0 +1,16 @@
+// a simple Barrier(size) construct to synchronise a number of participants
+module Barrier;
+
+export *;
+
+import * from Types;
+
+class Barrier(Int participants) implements IBarrier {
+
+  Unit synchronise() {
+    participants = participants - 1;
+    await (participants == 0);
+  }
+
+
+}

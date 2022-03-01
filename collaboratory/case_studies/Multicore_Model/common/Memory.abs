@@ -1,0 +1,23 @@
+// The simulated system's main memory is a singleton instance of the Memory class.
+module Memory;
+
+export *;
+
+import * from Types;
+import * from Assertions;
+
+//***********************IMPLEMENTATION OF MAIN MEMORY ********************************
+
+class Memory(MemMap mainMemory) implements IMemory{
+  Status getStatus(Address n) {
+    Maybe<Status> st = lookup(mainMemory,n);
+    assert (st!=Nothing); // segmentation fault
+    return fromJust(st);
+  }
+  
+  Unit setStatus(Address n,Status st){mainMemory = put(mainMemory,n,st);}
+
+  Unit printMemory() { println("Main Memory: "+toString(mainMemory)); }
+
+  MemMap getMemory(){ return mainMemory; }
+}

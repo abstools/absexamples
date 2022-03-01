@@ -1,0 +1,122 @@
+// The System class is a singleton object to initialize the whole simulation environment
+// and start the simulation (by calling `runSystem`).
+module System;
+
+export System;
+export ISystem from Types;
+
+import * from Types;
+import * from Assertions;
+import * from Core;
+import * from Scheduler;
+import * from Cache;
+import * from Memory;
+import * from Bus;
+import * from ABS.DC;
+
+
+//*********************** the initial memory state ********************
+
+def MemMap createMemory(Int min, Int max, Int interval, MemMap m) =
+  when (min<=max)
+  then createMemory(min, max-interval, interval, insert(m,Pair(max,Sh)))
+  else m;
+
+
+// if it is a configuration with resources, then it uses deployment components
+// if it is a configuration with Nothing, then it runs without deployment components
+class System(Maybe<Rat> resources) implements ISystem {
+
+  Unit runSystem(Int nCores, Int nbrOfCaches, Int l1Size,  Int maxMem,  RstList rst){
+    // println(if isJust(resources)
+    //         then "Configuration with Deployment Components"
+    //         else "Configuration without Deployment Components");
+
+    // create the hardware main memory
+    IMemory mm = this.createMem(maxMem);
+
+    // create the system's communication bus
+    IBus bus = new Bus(mm);
+
+    // create the "OS" scheduler of tasks
+    IScheduler sched = new FIFOScheduler(nCores);
+
+    // holds all the cores of the system
+    List<ICore> cores = Nil;
+    // holds all the caches (any level, any core) of the system
+    List<ICache> caches = Nil;
+    // holds each l1 cache from all the cores of the system
+    List<ICache> cachesL1 = Nil;
+
+    while (nCores > 0) {
+      // A readable name for the Core, used in debugging/printing
+      String name = "C"+toString(nCores);
+
+      // the resources that the DC of each core can use
+      Rat rc = case resources {
+                Nothing => 0;
+                Just(x) => x;
+              };
+      DeploymentComponent dc = new DeploymentComponent(name, map[Pair(Speed,rc)]); // NOTE: leave this here
+
+      // create this core's caches
+      List<ICache> cachesC = this.createCaches(name, bus,mm, l1Size, nbrOfCaches);
+
+      // connect the First Level Cache of this core to the BUS
+      ICache l1 = head(cachesC);
+      // set level one cache info in all the caches
+      foreach (cache in cachesC) { cache.setMyCaches(cachesC); }
+      bus.connectCaches(cachesC);
+
+      // Create the Core
+      ICore c;
+      switch (resources) {
+	  Nothing => c = new Core(name, sched, l1, nbrOfCaches);
+	  _ => [DC: dc] c = new Core(name, sched, l1, nbrOfCaches);
+      }
+
+      cores = Cons(c,cores);
+      caches = concatenate(cachesC,caches);
+      nCores = nCores-1;
+    }
+
+    sched.putTask(rst); // Place the created program to-be-simulated inside the scheduler
+    sched.done(); // This call will block until the scheduler is empty and all cores are idle.
+
+    // SIMULATION RUN FINISHED
+
+    // DO SOME SAFETY CHECKS
+    List<RstList> q = sched.getQueue();
+    assert  checkEmtpySchedulerQueue(q);
+
+    MemMap m = mm.getMemory();
+    assert checkAllSharedInMemory(m);
+
+    // PRINT the final, total cache misses/penalties per core
+    foreach (c in cores) { await c!printCore(); }
+
+  }
+
+  // initialize the main-memory object
+  IMemory createMem(Int max){
+    MemMap m = createMemory(1, max, 1, map[]);
+    assert checkAllSharedInMemory(m);
+    return new Memory(m);
+  }
+
+  // creates and returns a hierarchy of cache-objects for a single core, e.g. a list [l1,l2,l3...]
+  List<ICache> createCaches(String cName, IBus bus, IMemory mm, Int l1Size, Int level){
+      Int nbrOfLevels = level;
+      List<ICache> caches = Nil;
+      ICache thisLevel; // the cache that is currently being created
+      Maybe<ICache> nextLevel = Nothing; // the next level for the currently creating cache
+      while (level > 0) {
+	  thisLevel = new Cache(bus, mm, nextLevel, l1Size*level, level, nbrOfLevels); // ift thisLevel is LLC, the nextLevel will be Nothing
+	  caches = Cons(thisLevel,caches);
+	  nextLevel = Just(thisLevel);
+	  level = level - 1;
+      }
+      return caches;
+  }
+
+ }

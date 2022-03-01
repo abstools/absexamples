@@ -1,0 +1,12 @@
+// other auxiliary & general functions, not provided in the ABS standard library 
+module Utils;
+
+export mapToList;
+
+//auxiliary funtions for select
+def List<Pair<A,B>> mapToList<A,B>(Map<A,B> m) = mapToList_(m,keys(m));
+
+def List<Pair<A,B>> mapToList_<A,B>(Map<A,B> m, Set<A> s) =
+  when emptySet(s)
+  then Nil
+  else let (A k) = take(s) in Cons(Pair(k,lookupUnsafe(m,k)),mapToList_(m,remove(s,k)));
