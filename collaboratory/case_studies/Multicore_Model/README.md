@@ -1,17 +1,19 @@
 # ABS Model of a A Multicore Memory System
 
+![Figure cores.png](./cores.png | width=500px)
+
 A multicore memory system consists of cores that contain tasks to be executed,
 the data layout in main memory (indicating where data is allocated), and a
 system architecture consisting of cores with private multi-level caches and
-shared memory. See ![Figure cores.png](./cores.png). Such a system is parametric
-in the number of cores, the number and size of caches, and the associativity
-and replacement policy.  Data is organised in blocks that move between the
-caches and the main memory.  For simplicity, we abstract from the data content
-of the memory blocks, assume that the size of cache lines and memory blocks in
-main memory coincide and transfer memory blocks from the caches of one core to
-the caches of another core via the main memory. As a consequence, the tasks
-executed in the cores are represented as data access patterns, abstracting
-from their computational content.
+shared memory (see Figure 1). Such a system is parametric in the number of
+cores, the number and size of caches, and the associativity and replacement
+policy.  Data is organised in blocks that move between the caches and the main
+memory.  For simplicity, we abstract from the data content of the memory
+blocks, assume that the size of cache lines and memory blocks in main memory
+coincide and transfer memory blocks from the caches of one core to the caches
+of another core via the main memory. As a consequence, the tasks executed in
+the cores are represented as data access patterns, abstracting from their
+computational content.
  
 Task execution on a core requires memory blocks to be transferred from the
 main memory to the closest cache.  Each cache has a pool of instructions to
@@ -28,9 +30,10 @@ messages request read access and `RdX` messages read exclusive access to a
 memory block. The latter invalidates other copies of the same block in other
 caches to provide write access.
 
-This use-case contains a distributed implementation of this model in ABS. See
-![Figure initialConfiguration.png](./initialConfiguration.png). A transition
-system specification of this model can be found at
+![Figure initialConfiguration.png](./initialConfiguration.png)
+
+This use-case contains a distributed implementation of this model in ABS (see
+Figure 2). A transition system specification of this model can be found at
 https://doi.org/10.1016/j.scico.2019.04.003
 
 We have two versions of the model which can run with different initial
