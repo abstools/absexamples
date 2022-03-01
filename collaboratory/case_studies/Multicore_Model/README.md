@@ -1,6 +1,8 @@
 # ABS Model of a A Multicore Memory System
 
-![Figure cores.png](./cores.png)
+| ![Figure cores.png](./cores.png) |
+|:--:|
+| <b>Figure 1</b>|
 
 A multicore memory system consists of cores that contain tasks to be executed,
 the data layout in main memory (indicating where data is allocated), and a
@@ -30,7 +32,10 @@ messages request read access and `RdX` messages read exclusive access to a
 memory block. The latter invalidates other copies of the same block in other
 caches to provide write access.
 
-![Figure initialConfiguration.png](./initialConfiguration.png)
+| ![Figure initialConfiguration.png](./initialConfiguration.png) |
+|:--:|
+| <b>Figure 2</b>|
+
 
 This use-case contains a distributed implementation of this model in ABS (see
 Figure 2). A transition system specification of this model can be found at
