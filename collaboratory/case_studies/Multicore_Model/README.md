@@ -2,7 +2,7 @@
 
 | ![Figure cores.png](./cores.png) |
 |:--:|
-| <b>Figure 1</b>: Ssytem memory architecture |
+| <b>Figure 1</b>: System memory architecture |
 
 A multicore memory system consists of cores that contain tasks to be executed,
 the data layout in main memory (indicating where data is allocated), and a
