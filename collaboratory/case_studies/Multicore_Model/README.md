@@ -2,7 +2,7 @@
 
 | ![Figure cores.png](./cores.png) |
 |:--:|
-| <b>Figure 1</b>|
+| <b>Figure 1</b>: Ssytem memory architecture |
 
 A multicore memory system consists of cores that contain tasks to be executed,
 the data layout in main memory (indicating where data is allocated), and a
@@ -34,7 +34,7 @@ caches to provide write access.
 
 | ![Figure initialConfiguration.png](./initialConfiguration.png) |
 |:--:|
-| <b>Figure 2</b>|
+| <b>Figure 2</b>: ABS model structure |
 
 
 This use-case contains a distributed implementation of this model in ABS (see
