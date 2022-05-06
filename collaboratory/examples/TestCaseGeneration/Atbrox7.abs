@@ -427,7 +427,7 @@ implements MapReduce {
         List<Pair<Word, Fut<List<URI>>>> fReduceResults = Nil;
         List<Pair<Word, List<URI>>> result = Nil;
 
-        while (~isEmpty(items)) {
+        while (!isEmpty(items)) {
             Pair<URI, List<Word>> item = head(items);
             items = tail(items);
             Worker w = await this!getWorker();
@@ -437,14 +437,14 @@ implements MapReduce {
             fMapResults = appendright(fMapResults, fMap);
         }
        
-        while (~isEmpty(fMapResults)) {
+        while (!isEmpty(fMapResults)) {
             // "The MapReduce library groups together all intermediate values
             // associated with the same intermediate key I ..." [ditto]
 	    Fut<List<Pair<Word, URI>>> fMapResult = head(fMapResults);
             fMapResults = tail(fMapResults);
             await fMapResult?;
             List<Pair<Word, URI>> mapResult = fMapResult.get;
-            while (~isEmpty(mapResult)) {
+            while (!isEmpty(mapResult)) {
                 Pair<Word, URI> keyValuePair = head(mapResult);
                 mapResult = tail(mapResult);
                 List<URI> inter = lookupDefault(intermediates, fst(keyValuePair), Nil);
@@ -458,7 +458,7 @@ implements MapReduce {
             // to form a possibly smaller set of values.  Typically just zero or
             // one outpout value is produced per Reduce invocation." [ditto]
             Set<Word> keys = keys(intermediates);
-            while(~emptySet(keys)) {
+            while(!emptySet(keys)) {
                 Word key = take(keys);
                 keys = remove(keys, key);
                 List<URI> values = lookupUnsafe(intermediates, key);
@@ -466,7 +466,7 @@ implements MapReduce {
                 Fut<List<URI>> fReduce = w!invokeReduce(key, values);
                 fReduceResults = appendright(fReduceResults, Pair(key, fReduce));
             }
-            while (~isEmpty(fReduceResults)) {
+            while (!isEmpty(fReduceResults)) {
                 Pair<Word, Fut<List<URI>>> reduceResult = head(fReduceResults);
                 fReduceResults = tail(fReduceResults);
                 Word key = fst(reduceResult);
@@ -488,7 +488,7 @@ implements MapReduce {
                     nWorkers = nWorkers + 1;
                     workers = insertElement(workers, w);
                 }
-                await ~(emptySet(workers));
+                await !(emptySet(workers));
             }
             Worker result = take(workers);
             workers = remove(workers, result);
@@ -515,7 +515,7 @@ class Worker(MapReduce master) implements Worker {
     // begin customizable section ------------------
     Unit map(URI key, List<Word> value) {
         List<Word> wordlist = value;
-        while (~(wordlist == Nil)) {
+        while (!(wordlist == Nil)) {
             Word word = head(wordlist);
             wordlist = tail(wordlist);
             this.emitMapResult(word, key);
@@ -523,7 +523,7 @@ class Worker(MapReduce master) implements Worker {
     }
     Unit reduce(Word key, List<URI> value) {
         Set<URI> resultset = set(value); //removes duplicates
-        while (~(emptySet(resultset))) {
+        while (!(emptySet(resultset))) {
             URI file = take(resultset);
             resultset = remove(resultset, file);
             this.emitReduceResult(file);
@@ -609,11 +609,11 @@ class CMemkite(CloudProvider provider) implements Memkite {
         // maybe do this once a day, run processing once an hour
         // i.e., do not update initial configuration every time
         initial_configuration = union(initial_configuration, new_data);
-        while (~emptySet(new_data)) {
+        while (!emptySet(new_data)) {
             IndexDataBundle bundle = take(new_data);
             new_data = remove(new_data, bundle);
             Set<MobileDevice> mobile_devices = keys(provisioned_data);
-            while (~emptySet(mobile_devices)) {
+            while (!emptySet(mobile_devices)) {
                 MobileDevice mobile_device = take(mobile_devices);
                 mobile_devices = remove(mobile_devices, mobile_device);
                 provisioned_data = put(provisioned_data, mobile_device,
@@ -664,7 +664,7 @@ class CMobileDevice(Memkite memkite) implements MobileDevice {
     Set<URI> search(Term query) {
         Set<IndexDataBundle> to_search = local_data;
 	Set<URI> results = set[];
-	while(~emptySet(to_search)) {
+	while(!emptySet(to_search)) {
             
 	    // iterate through local data
 	    // and search for query in each index
@@ -677,7 +677,7 @@ class CMobileDevice(Memkite memkite) implements MobileDevice {
 	    PostingList posting_list = lookupDefault(inverted_index, query, list[]); 
 	    // note: could return entire posting list as result
 	    // but later steps will do "proper search", i.e. phrases
-	    while(~isEmpty(posting_list)) {
+	    while(!isEmpty(posting_list)) {
 		URI uri = head(posting_list);
 		posting_list = tail(posting_list);
 		results = insertElement(results, uri);

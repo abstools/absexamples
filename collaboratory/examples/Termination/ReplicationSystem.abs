@@ -109,7 +109,7 @@ def Set<B> snds<A, B>(Set<Pair<A, B>> ps) =
 
 def Bool range(List<Int> vals, Int limit, Bool strict) = 
   case vals {
-    Nil => ~ strict;
+    Nil => ! strict;
     _ => let ( Int r ) = ( maximum(vals) - minimum(vals) ) in case strict {
       True => ( r == limit );
       False => ( r <= limit );
@@ -459,7 +459,7 @@ def Bool isFile(FileContent c) =
   };
 
 def Bool isDirectory(FileContent c) = 
-  ~ isFile(c);
+  ! isFile(c);
 
 def FileSize fileContent(File f) = 
   content(snd(f));
@@ -784,7 +784,7 @@ class SyncServerAcceptorImpl([Final] [Near]SyncServer server) implements SyncSer
   ConnectionThread getConnection(ClientJob job, Int cost){
     ConnectionThread thread = null;
     Bool shutdown = server.isShutdownRequested();
-    if ( ~ shutdown ){
+    if ( ! shutdown ){
       Resource resource = this.getResource();
       thread = new ConnectionThreadImpl(job, server, resource, threads, cost);
       threads = ( threads + 1 );
@@ -846,7 +846,7 @@ class TesterImpl(ServerNode expected, Client actual) implements Tester {
       Bool ah = hasQualifiedEntriesIn(act, id);
       if ( ( ( eh != ah ) && eh ) ){
         FileContent ce = fromJust(getFromEntryIn(exp, id));
-        assert ~ isFile(ce);
+        assert ! isFile(ce);
         assert emptySet(filters(pattern, getFileIdFromDir(dir(id, entries(ce)))));
       } else if ( eh ){
         FileContent ce = fromJust(getFromEntryIn(exp, id));
@@ -983,7 +983,7 @@ class UpdaterImpl(Int updates, SyncServer server) implements Updater {
     UpdatableDataBase db = fd.get;
     Map<FileId, FileContent> changes = EmptyMap;
     Int count = 0;
-    while (( ~ sd && ( ( updates < 0 ) || ( count < updates ) ) )) {
+    while (( ! sd && ( ( updates < 0 ) || ( count < updates ) ) )) {
       changes = this.makeChange();
       histories = Cons( changes, histories );
       if ( ( changes != EmptyMap ) ){
@@ -993,7 +993,7 @@ class UpdaterImpl(Int updates, SyncServer server) implements Updater {
       await duration(best, worst);
       count = ( count + 1 );
     }
-    /*while (( ~ sd && ( ( updates < 0 ) || ( count < updates ) ) )) {
+    /*while (( ! sd && ( ( updates < 0 ) || ( count < updates ) ) )) {
       changes = this.makeChange();
       histories = Cons( changes, histories );
       if ( ( changes != EmptyMap ) ){
@@ -1101,7 +1101,7 @@ class DataBaseImpl implements ServerDataBase, ClientDataBase, UpdatableDataBase 
     Bool result = False;
     String name = schedname(schedule);
     List<TransactionId> tids = lookupDefault(transactions, name, Nil);
-    if ( ~ contains(set(tids), p) ){
+    if ( ! contains(set(tids), p) ){
       transactions = put(transactions, name, Cons( p, tids ));
       result = True;
     }
@@ -1547,7 +1547,7 @@ class SyncClientImpl([Final]Int maxJobs, [Final]ClientId id) implements Internal
   }
   Unit scheduleJob(JobType jb, Schedule schedule){
     this.waitFor(schedule);
-    if ( ~ shutDown ){
+    if ( ! shutDown ){
       this.setNext(schedule);
       [Deadline : dline(schedule)]
       this.makeJob(jb, schedule);
@@ -1731,13 +1731,13 @@ class ClientJobImpl([Final]Int maxJobs, [Far] [Final]InternalClient client, [Fin
       }
       Fut<Bool> sd = client!isShutdownRequested();
       Bool shutDown = sd.get;
-      if ( ~ shutDown ){
+      if ( ! shutDown ){
         this.becomeState(WaitToReplicate);
       }
       this.nextJob();
       if ( ( job != Boot ) ){
         Duration d = deadline();
-        if ( ~ isDurationInfinite(d) ){
+        if ( ! isDurationInfinite(d) ){
           deadline = Just( durationValue(d) );
           jd = updateJobData(jd, cost, fromJust(deadline), now());
         }
@@ -1752,7 +1752,7 @@ class ClientJobImpl([Final]Int maxJobs, [Far] [Final]InternalClient client, [Fin
     Fut<Bool> bf = client!isShutdownRequested();
     await bf?;
     Bool bool = bf.get;
-    if ( ~ bool ){
+    if ( ! bool ){
       Fut<Unit> unit = client!requestShutDown();
       await unit?;
       unit.get;
