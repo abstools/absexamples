@@ -257,7 +257,7 @@ class LoadBalancerEndPointImpl(List<Service> services) implements LoadBalancerEn
 	
 	Bool add(Service service) {
 		Bool result = False;	
-		if (~inList(services, service)) {
+		if (!inList(services, service)) {
 			services = Cons(service, services);
 			current = Cons(service, services);
 			result = True;
@@ -1119,7 +1119,7 @@ class MonitoringServiceImpl implements MonitoringService {
 		Set<Int> keys = keys(thisInterval);
 		
 		Bool done = False;
-		while (keys != EmptySet && ~done) {
+		while (keys != EmptySet && !done) {
 			Pair<Set<Int>, Int> nt = next(keys);
 			List<Monitor> monitors = lookupDefault(thisInterval, snd(nt), Nil);
 			if (inList(monitors, monitor)) {

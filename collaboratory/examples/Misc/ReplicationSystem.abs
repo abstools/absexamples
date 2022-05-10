@@ -20,7 +20,7 @@ implements SyncServerAcceptor {
 		
 		// Shutdown flag	
 		Bool shutdown = this.server.isShutdownRequested();
-		if (~ shutdown) {
+		if (! shutdown) {
 			// allocate resources to connection thread
 			thread = new ConnectionThreadImpl(job,server,threads);
 			threads = threads + 1; // for debugging
@@ -422,7 +422,7 @@ class ClientJobImpl(
 			//Switch to the proper state after finishing.
 			//From all states we can go to the end state to shutdown.
 			Fut<Bool> sd = client!isShutdownRequested(); Bool shutDown = sd.get;
-			if (~shutDown) {
+			if (!shutDown) {
 				this.becomeState(WaitToReplicate);
 			}
 			
@@ -457,7 +457,7 @@ class ClientJobImpl(
 	Unit shutDownClient() {
 		Fut<Bool> bf = client!isShutdownRequested(); await bf?; 
 		Bool bool = bf.get;
-		if (~bool) {
+		if (!bool) {
 			Fut<Unit> unit = client!requestShutDown(); await unit?; unit.get;
 			this.becomeState(End);
 		}
@@ -608,7 +608,7 @@ class SyncClientImpl(
 		
 		// only proceed if a shutdown 
 		// request has not been made.
-		if (~shutDown) {
+		if (!shutDown) {
 			// block subsequent onces
 			this.setNext(schedule);
 			this.makeJob(jb,schedule);
@@ -955,7 +955,7 @@ implements SyncServerClientCoordinatorSpec {
 		this.acceptor = fs.get;
 		
 		Bool shutdown = this.isServerShutdownRequested();
-		while (~shutdown) {
+		while (!shutdown) {
 			//try polling on the return boolean value
 			Fut<Bool> fd = acceptor!isAcceptingConnection(); await fd?;
 			Bool accept = fd.get;
@@ -965,7 +965,7 @@ implements SyncServerClientCoordinatorSpec {
 			// This is abstracted in this model and 
 			// so we use a flag to model this.
 			if (accept) {
-				if (~ emptySet(threads) && internal) {
+				if (! emptySet(threads) && internal) {
 					Fut<Unit> unit = this.acceptor!suspendConnection(); await unit?;
 					internal = False;
 				} else {
@@ -1030,7 +1030,7 @@ implements SyncServerClientCoordinatorSpec {
 		//Fut<Bool> rf = snapshot!hasUpdated();
 		//Bool up = rf.get;
 		
-		//shutDown = ~up;
+		//shutDown = !up;
 		
 		//reset the current client lists 
 		//if refresh is successful and is not waiting
@@ -1041,7 +1041,7 @@ implements SyncServerClientCoordinatorSpec {
 				traces = appendright(traces,Nil);
 			}
 			
-			if (~shutDown) {
+			if (!shutDown) {
 				currentClients = clients;
 			} else {
 				unit = server!requestShutDown(); unit.get;
@@ -1062,7 +1062,7 @@ implements SyncServerClientCoordinatorSpec {
 	
 	Unit addClient(ConnectionThread thread) {
 		ClientId id = this.getClientId(thread);
-		assert ~contains(currentClients,id);
+		assert !contains(currentClients,id);
 		currentClients= Insert(id,currentClients);
 	}*/
 	
@@ -1243,7 +1243,7 @@ implements ServerDataBase, ClientDataBase, UpdatableDataBase {
 		Bool result = False;
 		String name = schedname(schedule);
 		List<TransactionId> tids = lookupDefault(transactions,name,Nil);
-		if (~ contains(set(tids),p)) {
+		if (! contains(set(tids),p)) {
 			transactions = put(transactions,name,Cons(p,tids));
 			result = True;
 		}
@@ -1346,7 +1346,7 @@ def Set<B> snds<A, B>(Set<Pair<A, B>> ps) =
   
 def Bool range(List<Int> vals, Int limit, Bool strict) =
 	case vals {
-		Nil => ~strict;
+		Nil => !strict;
 		_ => let (Int r) = maximum(vals) - minimum(vals) in
 			 case strict {
 			 	True => r == limit;
@@ -1732,7 +1732,7 @@ def Directory dir(FileId i, FileEntry e) = Pair(i,Entries(e));
 def String fileSep() = "/";
 def FileId rootId() = "root";
 def Bool isFile(FileContent c) = case c { Content(_) => True; _ => False; };
-def Bool isDirectory(FileContent c) = ~isFile(c);
+def Bool isDirectory(FileContent c) = !isFile(c);
 
 def List<String> nameToPath(String name) = split(name,fileSep());
 
@@ -1892,7 +1892,7 @@ def Maybe<FileContent> getFromEntry(FileEntry entry, FileId qualified) =
 
 def Maybe<FileContent> getFromEntryList(FileEntry entry, List<String> paths) = 
 	if length(paths) <= 0 then Nothing
-	else if ~contains(keys(entry),head(paths)) then Nothing
+	else if !contains(keys(entry),head(paths)) then Nothing
 		 else let (FileContent cc) = lookupUnsafe(entry,head(paths)) in
 			  if length(tail(paths)) == 0 then Just(cc) // at node
 			  else case cc {
@@ -2546,7 +2546,7 @@ interface SyncServerAcceptor extends ServerAcceptor {
  	 
  	/*
 	 * START ::= R       START.suspend = False;
-	 *   R   ::= a R     a.retVal = ~ R.suspend; R.suspend = R.suspend; 
+	 *   R   ::= a R     a.retVal = ! R.suspend; R.suspend = R.suspend; 
      *         | s S     R.suspend = True;
      *         | r R'    R.suspend = False;
      *         | g R'    g.retVal = new ConnectionThread(g.job); R.suspend = R'.suspend;
@@ -2894,7 +2894,7 @@ class TesterImpl(ServerNode expected, Client actual) implements Tester {
 			if (eh != ah && eh) {
 				// check if exp only contains non matching files
 				FileContent ce = fromJust(getFromEntryIn(exp,id));
-				assert ~isFile(ce);
+				assert !isFile(ce);
 				assert emptySet(filters(pattern,getFileIdFromDir(dir(id,entries(ce)))));
 			} else if (eh) {
 				FileContent ce = fromJust(getFromEntryIn(exp,id));
@@ -2990,7 +2990,7 @@ class UpdaterImpl(
 		
 		Map<FileId,FileContent> changes = EmptyMap;
 		Int count = 0;
-		while (~sd && (updates < 0 || count < updates)) {
+		while (!sd && (updates < 0 || count < updates)) {
 			changes = this.makeChange();
 			histories = Cons(changes,histories);
 			

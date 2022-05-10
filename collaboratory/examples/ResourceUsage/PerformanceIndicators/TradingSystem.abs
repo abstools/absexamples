@@ -730,7 +730,7 @@ class CashierImpl( BarCodeScannerEnvExt barCodeScannerEnv,
 		
 		
 		
-		//GRD while (~validated) {
+		//GRD while (!validated) {
   		while (nValidAttemps > 0) {
 			if ((paymentMode == CASH)) { //|| (isExpressModeOn == True)) {
 				this.pressKeys(moneyToInt(amountToGive));

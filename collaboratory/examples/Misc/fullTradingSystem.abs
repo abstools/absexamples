@@ -613,7 +613,7 @@ class CashierImpl( BarCodeScannerEnvExt barCodeScannerEnv,
 	    this.waitScreenChanged();
 	}
 
-	while (~validated) {
+	while (!validated) {
 	    if ((paymentMode == CASH) || (isExpressModeOn == True)) {
 		this.pressKeys(moneyToInt(amountToGive));
 		cashBoxEnv!close();
