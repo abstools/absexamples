@@ -70,4 +70,5 @@ class Controller(WaterTank tank, Float minlevel, Float maxlevel) implements Cont
 // Local Variables:
 // abs-clock-limit: 100
 // abs-local-port: 8080
+// abs-modelapi-index-file: "index.html"
 // End:
