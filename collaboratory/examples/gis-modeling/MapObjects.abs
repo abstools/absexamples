@@ -1,0 +1,30 @@
+module MapObjects;
+
+data MapData = MapData(Float lat, Float long, String description);
+
+interface OMap {
+    [HTTPCallable] Pair<Float, Float> getInitialCoordinates();
+    [HTTPCallable] List<MapData> getMapObjects();
+}
+
+class OMap implements OMap {
+    Pair<Float, Float> getInitialCoordinates() {
+        return Pair(59.90, 10.73);
+    }
+    List<MapData> getMapObjects() {
+        return list[MapData(59.91115, 10.7357, "City Hall"),
+                    MapData(59.90758, 10.75197, "Opera House")];
+    }
+}
+
+{
+    [HTTPName: "map"] OMap m = new OMap();
+}
+
+
+// Local Variables:
+// abs-local-port: 8080
+// abs-modelapi-index-file: "index.html"
+// abs-java-output-jar-file: "MapObjects.jar"
+// abs-modelapi-static-dir: "static"
+// End:

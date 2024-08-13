@@ -1,2 +1,4 @@
 .DS_Store
 gen/
+/collaboratory/examples/gis-modeling/MapObjects.jar
+/collaboratory/examples/single-watertank/Watertank.jar
