@@ -1,0 +1,92 @@
+module SampleWebserver;
+import * from ABS.DC;
+
+// Control flow
+// Basic Deployment
+// Basic resource (cost) model
+// No data flow / calculations
+// No deadlock
+
+// Alternative balancing strategy: don't use round-robin, use first available
+// machine instead
+
+interface Database {
+    String query();
+}
+
+interface Webworker {
+    String processRequest();
+}
+
+interface Loadbalancer {
+    String processRequest();
+}
+
+
+class Database implements Database {
+    String query() {
+        [Cost: 3] return "Result";
+    }
+}
+
+class Webworker(Database db) implements Webworker {
+    String processRequest() {
+        [Cost: 16] String result = await db!query();
+        return result + " from " + toString(this);
+    }
+}
+
+
+class Loadbalancer(Int nWorkers, Database db, CloudProvider provider) implements Loadbalancer {
+    List<Webworker> workers = Nil;
+
+    Unit run() {
+        Int i = 0;
+        while (i < nWorkers) {
+            DeploymentComponent dc = await provider!launchInstanceNamed("Small");
+            [DC: dc] Webworker w = new Webworker(db);
+            workers = Cons(w, workers);
+            i = i + 1;
+        }
+    }
+
+    String processRequest() {
+        await length(workers) > 0;
+        Webworker w = head(workers);
+        workers = tail(workers);
+        String result = await w!processRequest();
+        // workers = appendright(workers, w);
+        workers = Cons(w, workers);
+        return result;
+    }
+}
+
+
+class Client (Loadbalancer lb) {
+    Unit run() {
+        while (timeValue(now()) < 100) {
+            String s = await lb!processRequest();
+            println(s + " at " + toString(now()));
+            await duration(1, 1);
+        }
+    }
+}
+
+{
+    CloudProvider provider = new CloudProvider("Amazon");
+    provider!setInstanceDescriptions(map[Pair("Small", map[Pair(Cores, 1), Pair(Speed, 15)])]);
+    DeploymentComponent database_c = await provider!launchInstanceNamed("Small");
+    [DC: database_c] Database db = new Database();
+    Loadbalancer lb = new Loadbalancer(5, db, provider);
+    new Client(lb);
+    new Client(lb);
+    new Client(lb);
+    new Client(lb);
+    new Client(lb);
+    new Client(lb);
+    new Client(lb);
+    new Client(lb);
+    new Client(lb);
+    await duration(100, 100);
+    provider!shutdown();
+}

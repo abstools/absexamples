@@ -1,0 +1,75 @@
+module SampleWebserver;
+
+// Control flow
+// No deployment
+// No resource (cost) model
+// No data flow / calculations
+// No deadlock
+
+
+interface Database {
+    String query();
+}
+
+interface Webworker {
+    String processRequest();
+}
+
+interface Loadbalancer {
+    String processRequest();
+}
+
+
+class Database implements Database {
+    String query() {
+        return "Result";
+    }
+}
+
+class Webworker(Database db) implements Webworker {
+    String processRequest() {
+        String result = await db!query();
+        return result + " from " + toString(this);
+    }
+}
+
+
+class Loadbalancer(Int nWorkers, Database db) implements Loadbalancer {
+    List<Webworker> workers = Nil;
+
+    Unit run() {
+        Int i = 0;
+        while (i < nWorkers) {
+            Webworker w = new Webworker(db);
+            workers = Cons(w, workers);
+            i = i + 1;
+        }
+    }
+
+    String processRequest() {
+        await length(workers) > 0;
+        Webworker w = head(workers);
+        workers = tail(workers);
+        String result = await w!processRequest();
+        workers = appendright(workers, w);
+        return result;
+    }
+}
+
+
+class Client (Loadbalancer lb) {
+    Unit run() {
+        while (timeValue(now()) < 100) {
+            String s = await lb!processRequest();
+            println(s + " at " + toString(now()));
+            await duration(1, 1);
+        }
+    }
+}
+
+{
+    Database db = new Database();
+    Loadbalancer lb = new Loadbalancer(5, db);
+    new Client(lb);
+    await duration(100, 100);
+}
