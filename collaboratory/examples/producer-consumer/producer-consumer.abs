@@ -1,0 +1,36 @@
+module ProducerConsumer;
+
+class ProducerConsumer(Int n_items) {
+    List<Int> work_items = list[];
+
+    Unit run() {
+        this!producer(1);
+        this!consumer(1);
+    }
+
+    Unit producer(Int id) {
+        Int current_item = 1;
+        while (current_item <= n_items) {
+            await length(work_items) < 5;
+            println(`producer $id$ producing item $current_item$`);
+            work_items = appendright(work_items, current_item);
+            current_item = current_item + 1;
+        }
+    }
+
+    Unit consumer(Int id) {
+        Int n_processed_items = 0;
+        while (n_processed_items < n_items) {
+            await work_items != Nil;
+            Int item = head(work_items);
+            work_items = tail(work_items);
+            n_processed_items = n_processed_items + 1;
+            println(`consumer $id$ got item $item$`);
+        }
+    }
+}
+
+
+{
+    new ProducerConsumer(20);
+}
