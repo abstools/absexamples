@@ -1,7 +1,8 @@
 
 * The single water tank example for ABS
 
-See https://abs-models.org/documentation/examples/single-watertank/ for a discussion of this example.
+See <https://abs-models.org/examples/single-watertank.html> for a
+discussion of this example.
 
 See
 https://projects.au.dk/fileadmin/D3.5_Examples_Compendium_2.pdf#page=9

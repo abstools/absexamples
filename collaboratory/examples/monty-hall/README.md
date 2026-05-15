@@ -9,5 +9,6 @@ Wikipedia](https://en.wikipedia.org/wiki/Monty_Hall_problem)):
 > you, "Do you want to pick door No. 2?"  Is it to your advantage to
 > switch your choice?
 
-See <https://abs-models.org/documentation/examples/monty-hall/> for more documentation.
+See <https://abs-models.org/examples/monty-hall.html> for more
+documentation.
 

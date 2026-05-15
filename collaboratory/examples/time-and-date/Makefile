@@ -4,11 +4,11 @@ all: run			## Generate data and start model (default)
 
 .PHONY: compile
 compile: CalendarTime.abs index.html ## Compile the model
-	absc --erlang CalendarTime.abs --modelapi-index-file index.html
+	absc --java CalendarTime.abs --modelapi-index-file index.html -o CalendarTime.jar
 
 .PHONY: compile
 run: compile			## Execute the model
-	gen/erl/run -p 8080 -v
+	java -jar CalendarTime.jar -p 8080
 
 .PHONY: help
 help:				## Display this message
