@@ -14,39 +14,39 @@
     </div>
     <script type="text/javascript">
 
-    'use strict';
-    function absolute_date(startdate, offset) {
-        let days = Math.floor(offset);
-        let time = offset - days;
-        let date = new Date(startdate);
-        date.setDate(date.getDate() + days);
-        date.setTime(date.getTime() + time * 24 * 60 * 60 * 1000);
-        return date.getTime(); // number of milliseconds, as needed by Highcharts
-    }
+      'use strict';
+      function absolute_date(startdate, offset) {
+          let days = Math.floor(offset);
+          let time = offset - days;
+          let date = new Date(startdate);
+          date.setDate(date.getDate() + days);
+          date.setTime(date.getTime() + time * 24 * 60 * 60 * 1000);
+          return date.getTime(); // number of milliseconds, as needed by Highcharts
+      }
 
-    function drawChart(){
-        $.when(
-            $.getJSON("/call/Calendar/getStartDate"),
-            $.getJSON("/call/Calendar/getValues")
-        ).done(function(resstartdate, resvalues) {
-            let startdate = resstartdate[0].result;
-            let data = resvalues[0].result.map(p => [absolute_date(startdate, p.fst), p.snd]);
-            Highcharts.chart('chart-container', {
-                type: 'line',
-                title: { text: 'Dates and values from ABS' },
-                xAxis: { type: 'datetime' },
-                yAxis: { title: { text: 'Value (random number)' } },
-                series: [{
-                     name: 'random value', data: data
-                 }]
-            });
-        });
-    }
+      function drawChart(){
+          Promise.all([fetch("/call/Calendar/getStartDate"), fetch("/call/Calendar/getValues")])
+              .then((values) => values.map(p => p.json()))
+              .then((p) => Promise.all(p))
+              .then(([resstartdate, resvalues]) => {
+                  let startdate = resstartdate.result;
+                  let data = resvalues.result.map(p => [absolute_date(startdate, p.fst), p.snd]);
+                  Highcharts.chart('chart-container', {
+                      type: 'line',
+                      title: { text: 'Dates and values from ABS' },
+                      xAxis: { type: 'datetime' },
+                      yAxis: { title: { text: 'Value (random number)' } },
+                      series: [{
+                         name: 'random value',
+                         data: data
+                      }]
+                  })
+              });
+      }
 
-    $(document).ready(function(){
-        drawChart();
-    });
-
+      document.addEventListener("DOMContentLoaded", function () {
+          drawChart();
+      });
     </script>
   </body>
 </html>

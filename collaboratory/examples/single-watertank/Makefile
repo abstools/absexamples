@@ -1,15 +1,24 @@
 
 .PHONY: all
-all: run			## Generate data and start model (default)
+all: help		    ## Generate data and start model (default)
 
-.PHONY: compile
-compile: Watertank.abs index.html ## Compile the model
+.PHONY: compile-erlang
+compile-erlang: Watertank.abs index.html ## Compile the model (Erlang backend)
 	absc --erlang Watertank.abs --modelapi-index-file index.html
 
-.PHONY: run
-run: compile			## Execute the model
+.PHONY: run-erlang
+run-erlang: compile-erlang	## Execute the model (Erlang backend)
 	@echo "Open a browser at http://localhost:8080/ to see simulation results."
 	gen/erl/run -p 8080 -l 100 -v
+
+.PHONY: compile-java
+compile-java: Watertank.abs index.html ## Compile the model (Java backend)
+	absc --java Watertank.abs --modelapi-index-file index.html -o Watertank.jar
+
+.PHONY: run-java
+run-java: compile-java		## Execute the model (Java backend)
+	@echo "Open a browser at http://localhost:8080/ to see simulation results."
+	java -jar Watertank.jar -p 8080 -l 100
 
 .PHONY: clean			## Remove generated files
 clean:
